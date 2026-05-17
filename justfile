@@ -10,7 +10,7 @@ help:
     echo_default "init                 Initialize the project. Run after \`set_name\`."
     echo_default "refresh              Refresh the project with its pyproject.toml."
     echo_default "update_dotenv        Recreate the .env file from the .env.template file."
-    echo_default "format               Format <project_name> code with ruff. Example usage:"
+    echo_default "format               Format word_games code with ruff. Example usage:"
     echo_highlight "                         just format"
     echo_default "                       format specific file:"
     echo_highlight "                         just format <FilePathRelativeToProjectRoot>"
