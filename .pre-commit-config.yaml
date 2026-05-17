@@ -1,0 +1,26 @@
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v2.3.0
+  hooks:
+    - id: check-yaml
+    - id: end-of-file-fixer
+    - id: trailing-whitespace
+    - id: check-added-large-files
+      args: ['--maxkb=150']
+- repo: local
+  hooks:
+    - id: pytest
+      name: Run tests
+      entry: just test
+      language: system
+      pass_filenames: false
+      files: \.py$
+      stages: [pre-commit]
+
+    - id: format_and_check
+      name: Check & Format
+      entry: just format_and_check
+      language: system
+      pass_filenames: false
+      files: \.py$
+      stages: [pre-commit]
