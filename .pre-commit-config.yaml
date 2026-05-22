@@ -22,5 +22,6 @@ repos:
       entry: just format_and_check
       language: system
       pass_filenames: false
+      require_serial: true
       files: \.py$
       stages: [pre-commit]
