@@ -1,0 +1,26 @@
+
+/* HEADER */
+header{
+    display: flex;
+    flex-direction: row;
+}
+header h2:nth-of-type(2){
+    display: inline;
+    margin-left: 0px;
+    text-decoration: none;
+    border-bottom: none;
+    font-size: .95em;
+    padding-bottom: 0;
+}
+header h2:nth-of-type(2)::before{
+    content: '/';
+    font-size: 2em;
+}
+
+/* ANCHORS */
+main li a{
+    transition: text-shadow 1s ease;
+}
+main li a:hover{
+    text-shadow: #FC0 1px 0 10px;;
+}

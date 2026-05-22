@@ -1,0 +1,12 @@
+/* FONTS */
+main section, main p{
+    /* font-size: 14pt; */
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    color: rgb(211, 211, 211);
+}
+
+a{
+    color: inherit;
+    text-decoration: none;
+    font-weight: bold;
+}
