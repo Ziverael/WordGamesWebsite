@@ -96,3 +96,22 @@ is_valid_python_package_name(){
   esac
   return 0
 }
+
+
+set_secret(){
+  local name="${1:?Secret name not passed}"
+  local force="${2}"
+  if ! is_valid_filename "${name}"; then
+    echo "${name} is not valid secret name."
+    return 1
+  fi
+  secret_file=".secret/${name}"
+  [ "${force}" != "force" ] && [ -e "${secret_file}" ] && echo "Secret ${name} already exists." && return 1
+  printf "Enter ${name}: "
+  stty -echo
+  read secret
+  stty echo
+  printf "\n"
+  create_file_if_it_does_not_exist  "${secret_file}"
+  echo "${secret}" > "${secret_file}"
+}

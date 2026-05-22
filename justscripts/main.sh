@@ -1,20 +1,85 @@
 #!/usr/bin/env sh
 # shellcheck disable=SC2015
 # shellcheck disable=SC2120
+# shellcheck disable=SC1091
 . justscripts/env.sh
 . justscripts/setup.sh
 . justscripts/shell.sh
+. justscripts/podman.sh
 
 init_project(){
+    echo_title "Initializing project..."
     check_if_name_set "verbose"
     create_default_directories_and_files
     init_local_venv
     create_or_update_dotenv
+    define_secrets
 }
 
 refresh_project(){
+    echo_title "Refreshing project..."
+    stop_project_services
     sync_local_venv
     create_or_update_dotenv
+    rebuild_project_image
+    start_project_services
+}
+
+rebuild_project(){
+    rebuild_project_image
+    podman-compose -f docker-compose-dev.yaml build wordgames-app
+}
+
+up_project(){
+    echo_title "Starting project..."
+    start_project_services
+}
+
+down_project(){
+    echo_title "Stop project..."
+    stop_project_services
+
+}
+
+start_project_services(){
+    echo_default "Starting project services..."
+    start_service_if_it_is_not_running start-project-services docker-compose-dev.yaml
+}
+
+stop_project_services(){
+    echo_default "Stoping project services..."
+    podman-compose -f docker-compose-dev.yaml down
+}
+
+start_dev_helper(){
+    echo_default "Starting dev helper..."
+    start_service_if_it_is_not_running wordgames-app-dev-helper docker-compose-dev.yaml
+}
+
+stop_dev_helper(){
+    echo_default "Stoping dev helper..."
+    stop_service_if_it_is_running wordgames-app-dev-helper docker-compose-dev.yaml
+}
+
+rebuild_project_image(){
+    podman-compose -f docker-compose-dev.yaml build wordgames-app-image
+}
+
+rebuild_db(){
+    podman-compose -f docker-compose-dev.yaml build  wordgames-db
+}
+
+stop_db(){
+    podman compose -f docker-compose-dev.yaml down wordgames-db
+}
+
+up_db(){
+    podman compose -f docker-compose-dev.yaml up wordgames-db -d --remove-orphans
+}
+
+define_secrets(){
+    set_secret "db_user" "force"
+    set_secret "db_user_password" "force"
 }
 
 format_code () {
@@ -61,6 +126,11 @@ test_code () {
     echo "Coverage report available at $(pwd).local/coverage/htmlcov/index.html."
 }
 
+start_bash_session(){
+    start_dev_helper
+    podman-compose -f docker-compose-dev.yaml exec wordgames-app-dev-helper bash
+}
+
 clean_pycached () {
     echo_title "Removing all __pycache__ directories and *.py[cod] files..."
     find . -type f -name "*.py[cod]" -delete -or -type d -name "__pycached__" -delete
@@ -101,9 +171,10 @@ create_default_directories_and_files(){
     TMP_FILE=$(mktemp)
     {
         create_directory_if_it_does_not_exist ".local"
-        create_directory_if_it_does_not_exist "tmp"
-        create_directory_if_it_does_not_exist "data"
-        create_directory_if_it_does_not_exist "scalene"
+        create_directory_if_it_does_not_exist ".local/tmp"
+        create_directory_if_it_does_not_exist ".local/data"
+        create_directory_if_it_does_not_exist ".local/scalene"
+        create_file_if_it_does_not_exist ".local/.bash_history"
     } >> "${TMP_FILE}"
     if [ -n "$(cat "${TMP_FILE}")" ]
     then

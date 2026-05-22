@@ -1,0 +1,23 @@
+#!/bin/bash
+set -e
+
+create_database_and_its_admin () {
+  DATABASE_SECRET_FILE="${1:?}"
+  USER_SECRET_FILE="${2:?}"
+  PASSWORD_SECRET_FILE="${3:?}"
+
+  DATABASE=$(cat "${DATABASE_SECRET_FILE}")
+  USER=$(cat "${USER_SECRET_FILE}")
+  PASSWORD=$(cat "${PASSWORD_SECRET_FILE}")
+  psql -v ON_ERROR_STOP=1 --username "${POSTGRES_USER}" <<-EOSQL
+    CREATE USER ${USER} WITH PASSWORD '${PASSWORD}';
+    CREATE DATABASE ${DATABASE};
+    GRANT ALL PRIVILEGES ON DATABASE ${DATABASE} TO ${USER};
+EOSQL
+ # Then connect to the new database and grant schema privileges
+  psql -v ON_ERROR_STOP=1 --username "${POSTGRES_USER}" -d "${DATABASE}" <<-EOSQL
+    GRANT ALL ON SCHEMA public TO ${USER};
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO ${USER};
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO ${USER};
+EOSQL
+}
