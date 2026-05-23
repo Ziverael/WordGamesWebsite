@@ -7,6 +7,19 @@
 . justscripts/shell.sh
 . justscripts/podman.sh
 
+_ENV_FLAG_FILES=0
+for f in DEV PRE PRO
+do
+    if [ -e "$f" ]; then
+        ENV="$(echo $f | tr '[:upper:]' '[:lower:]')"
+        _ENV_FLAG_FILES=$((_ENV_FLAG_FILES + 1))
+    fi
+done
+if [ "$_ENV_FLAG_FILES" -ne 1 ]; then
+    echo_highlight "Found ${_ENV_FLAG_FILES} env configuration files. Create one of those files: DEV, PRE or PRO to set deployment environment."
+    return 1
+fi
+
 init_project(){
     echo_title "Initializing project..."
     check_if_name_set "verbose"
@@ -27,7 +40,7 @@ refresh_project(){
 
 rebuild_project(){
     rebuild_project_image
-    podman-compose -f docker-compose-dev.yaml build wordgames-app
+    podman-compose -f "docker-compose-${ENV}.yaml" build wordgames-app
 }
 
 up_project(){
@@ -43,38 +56,38 @@ down_project(){
 
 start_project_services(){
     echo_default "Starting project services..."
-    start_service_if_it_is_not_running start-project-services docker-compose-dev.yaml
+    start_service_if_it_is_not_running start-project-services "docker-compose-${ENV}.yaml"
 }
 
 stop_project_services(){
     echo_default "Stoping project services..."
-    podman-compose -f docker-compose-dev.yaml down
+    podman-compose -f "docker-compose-${ENV}.yaml" down
 }
 
 start_dev_helper(){
     echo_default "Starting dev helper..."
-    start_service_if_it_is_not_running wordgames-app-dev-helper docker-compose-dev.yaml
+    start_service_if_it_is_not_running wordgames-app-dev-helper "docker-compose-${ENV}.yaml"
 }
 
 stop_dev_helper(){
     echo_default "Stoping dev helper..."
-    stop_service_if_it_is_running wordgames-app-dev-helper docker-compose-dev.yaml
+    stop_service_if_it_is_running wordgames-app-dev-helper "docker-compose-${ENV}.yaml"
 }
 
 rebuild_project_image(){
-    podman-compose -f docker-compose-dev.yaml build wordgames-app-image
+    podman-compose -f "docker-compose-${ENV}.yaml" build wordgames-app-image
 }
 
 rebuild_db(){
-    podman-compose -f docker-compose-dev.yaml build  wordgames-db
+    podman-compose -f "docker-compose-${ENV}.yaml" build  wordgames-db
 }
 
 stop_db(){
-    podman compose -f docker-compose-dev.yaml down wordgames-db
+    podman compose -f "docker-compose-${ENV}.yaml" down wordgames-db
 }
 
 up_db(){
-    podman compose -f docker-compose-dev.yaml up wordgames-db -d --remove-orphans
+    podman compose -f "docker-compose-${ENV}.yaml" up wordgames-db -d --remove-orphans
 }
 
 define_secrets(){
@@ -128,7 +141,7 @@ test_code () {
 
 start_bash_session(){
     start_dev_helper
-    podman-compose -f docker-compose-dev.yaml exec wordgames-app-dev-helper bash
+    podman-compose -f "docker-compose-${ENV}.yaml" exec wordgames-app-dev-helper bash
 }
 
 clean_pycached () {

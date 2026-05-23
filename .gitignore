@@ -166,3 +166,7 @@ cython_debug/
 playground/
 tmp/
 data/
+
+DEV
+PRE
+PRO
