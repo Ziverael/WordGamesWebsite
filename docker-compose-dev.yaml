@@ -18,6 +18,8 @@ services:
     container_name: wordgames-app
     image: wordgames-app-image:${IMAGE_TAG}
     user: root
+    environment:
+      APP_SECRET_KEY:
     command: uv run flask --app word_games run --debug --port=8000 --host=0.0.0.0
     ports:
       - 127.0.0.1:58127:8000

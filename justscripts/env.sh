@@ -18,6 +18,7 @@ create_or_update_dotenv(){
         cp .env.template .env
         store_variable_in_dotenv_file "UID" "$(id -u)"
         store_variable_in_dotenv_file "GUID" "$(id -g)"
+        store_variable_in_dotenv_file "APP_SECRET_KEY" "$(tr -dc 'A-Za-z0-9!?%=' < /dev/urandom | head -c 24)"
     else
         echo_title "Updating .env file..."
         rm -f .local/.env.backup && cp .env .local/.env.backup && rm -f .env && cp .env.template .env
