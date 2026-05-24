@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block main %}
+        <section class="glass-card hero">
+            <h1>Nice to see you {{ username }}!</h1>
+            <p>
+                {% if len(active_assignments) %}
+                There are {{ len(active_assignments) }} active assignments waiting for you. Solve them now
+                <button>Go to assignments</button>
+                {% else %}
+                You have no active assignments. Have a nice day ;)
+            </p>
+            <button class="primary-btn">Get Started</button>
+        </section>
+
+        <section class="glass-grid">
+            <div class="glass-card">
+                <h2>Simplicity</h2>
+                <p>Select game temlate, prepare a game and  assign to your students.</p>
+            </div>
+
+            <div class="glass-card">
+                <h2>Community</h2>
+                <p>Join as a student or teacher. Add your students to classroom to let them solve assignments.</p>
+            </div>
+        </section>
+{% endblock %}

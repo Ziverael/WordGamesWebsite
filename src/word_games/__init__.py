@@ -5,10 +5,12 @@ def page_not_found(_error):
     return render_template("error.html"), 404
 
 
-def create_app(_config_name: str = "default"):
+def create_app():
     """Function factory"""
+    from word_games.config.app import APP_SETTINGS
 
     app = Flask(__name__)
+    app.config.from_object(APP_SETTINGS)
     app.register_error_handler(404, page_not_found)
 
     from word_games.view.main import main as main_bp
