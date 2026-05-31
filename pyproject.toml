@@ -85,6 +85,9 @@ convention = "numpy"
     "PLC0415", # Flask app is explicitly dynamic
     "E402", # Blueprint must be before modular imports
 ]
+"migration/env.py" = [
+    "INP001",  #  File `migration/env.py` is part of an implicit namespace package. Add an `__init__.py`.
+]
 "tests/**/*.py" = [
     "ARG001",  # Unused function argument:
     "DTZ001",  # The use of `datetime.datetime()` without `tzinfo` argument is not allowed
