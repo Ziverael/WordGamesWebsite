@@ -8,7 +8,7 @@ from wtforms import (
 )
 from wtforms.validators import DataRequired, Email, EqualTo, Length, Regexp
 
-from word_games.model import User
+from word_games.model import User  # type: ignore[attr-defined]
 
 
 class LoginForm(FlaskForm):

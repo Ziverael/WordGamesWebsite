@@ -3,6 +3,7 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
+import word_games.migration  # noqa: F401
 from word_games.config.app import APP_SETTINGS
 from word_games.database import BaseTable
 
