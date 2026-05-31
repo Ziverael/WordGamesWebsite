@@ -1,0 +1,74 @@
+services:
+  # Images
+  wordgames-app-image:
+    image: wordgames-app-image:${IMAGE_TAG}
+    build:
+      context: .
+      dockerfile: _project/py-slim.dockerfile
+      args:
+        BASE_IMAGE: ${BASE_IMAGE}
+        PIP_VERSION: ${PIP_VERSION}
+        UV_VERSION: ${UV_VERSION}
+        UID: ${UID:-10001}
+        GUID: ${GUID:-10001}
+        IS_PROD: "true"
+
+  # Serivces
+  wordgames-app:
+    container_name: wordgames-app
+    image: wordgames-app-image:${IMAGE_TAG}
+    user: root
+    command: uv run gunicorn -w 4 -b 0.0.0.0:8000 'word_games:create_app()'
+    ports:
+      - 127.0.0.1:58127:8000
+
+  wordgames-db:
+    container_name: wordgames-db
+    image: wordgames-db
+    build:
+      context: .
+      dockerfile: _project/postgres.dockerfile
+      args:
+        DATABASE_IMAGE: ${DATABASE_IMAGE}
+    user: postgres
+    environment: &db_env
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_user_password
+      PGPORT: ${DATABASE_PORT}
+      PGUSER: ${DATABASE_USER}  # Mute 'FATAL:  role "root" does not exist'
+    volumes:
+      - wordgames-db:/var/lib/postgresql/data
+      # EXTREMELY IMPORTANT INIT:
+      # https://www.crowdstrike.com/en-us/blog/securing-postgresql-from-cryptojacking-campaigns-in-kubernetes/
+      - ./_project/postgres/config:/docker-entrypoint-initdb.d
+    ports:
+      - "127.0.0.1:${DATABASE_PORT}:${DATABASE_PORT}"
+    healthcheck:
+      test: ["CMD", "pg_isready"]
+      interval: 1s
+      retries: 30
+    restart: unless-stopped
+    secrets:
+      - db_user_password
+
+  # Jobs
+  start-project-services:
+    container_name: start-project-services
+    image: busybox
+    command: "echo Project start successfully"
+    depends_on:
+      wordgames-app:
+        condition: service_healthy
+
+
+networks:
+  default:
+    name: word_games
+
+volumes:
+  wordgames-db:
+    name: wordgames-db
+
+secrets:
+  db_user_password:
+    file: .secret/db_user_password

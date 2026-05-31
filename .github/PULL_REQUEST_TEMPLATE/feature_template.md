@@ -25,5 +25,3 @@
 - [ ] The documentation has been updated to reflect the new feature
 
 ## Additional Notes
-
-

@@ -162,6 +162,11 @@ cython_debug/
 #.idea/
 
 .local/
+.secret
 playground/
 tmp/
 data/
+
+DEV
+PRE
+PRO

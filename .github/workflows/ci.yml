@@ -22,8 +22,11 @@ jobs:
       - name: Install uv
         run: curl -LsSf https://astral.sh/uv/install.sh | sh
 
-      - name: Install dependencies
-        run: uv sync --dev
+      - name: Install just
+        run: uv tool install rust-just
+
+      - name: Setup dependencies
+        run: uv sync --dev && touch DEV
 
       - name: Run pre-commit
         run: uv run pre-commit run --all-files

@@ -16,9 +16,31 @@ create_or_update_dotenv(){
         echo_title "Creating .env file..."
         echo_default "Creating new .env file from .env.template file..."
         cp .env.template .env
+        store_variable_in_dotenv_file "UID" "$(id -u)"
+        store_variable_in_dotenv_file "GUID" "$(id -g)"
+        store_variable_in_dotenv_file "APP_SECRET_KEY" "$(tr -dc 'A-Za-z0-9!?%=' < /dev/urandom | head -c 24)"
+        _db_user="$(get_variable_from_dotenv_file "DATABASE_USER")"
+        _db_pass="$(get_secret "db_user_password")"
+        _db_host="$(get_variable_from_dotenv_file "DATABASE_HOST")"
+        _db_port="$(get_variable_from_dotenv_file "DATABASE_PORT")"
+        _db_name="$(get_variable_from_dotenv_file "DATABASE_USER")"
+        store_variable_in_dotenv_file "APP_SQLALCHEMY_DATABASE_URI" "$(get_postgresql_connection_string \
+        "${_db_user}" \
+        "${_db_pass}" \
+        "${_db_host}" \
+        "${_db_port}" \
+        "${_db_name}" \
+        "psycopg" \
+        )"
     else
         echo_title "Updating .env file..."
         rm -f .local/.env.backup && cp .env .local/.env.backup && rm -f .env && cp .env.template .env
+        restore_variable_in_dotenv_file UID
+        restore_variable_in_dotenv_file GUID
+        restore_variable_in_dotenv_file DATABASE_HOST
+        restore_variable_in_dotenv_file DATABASE_PORT
+        restore_variable_in_dotenv_file APP_SECRET_KEY
+        restore_variable_in_dotenv_file APP_SQLALCHEMY_DATABASE_URI
     fi
     echo_default "Storing .env.template md5 sum..."
     sed_inplace "s|^DOTENV_TEMPLATE_MD5=.*$|DOTENV_TEMPLATE_MD5=${REAL_DOTENV_TEMPLATE_MD5}|g" .env
@@ -55,4 +77,17 @@ get_variable_from_dotenv_file () {
     VARIABLE_VALUE_WITHOUT_TRAILING_QUOTES="${VARIABLE_VALUE%\"}"
     VARIABLE_VALUE_WITHOUT_LEADING_QUOTES="${VARIABLE_VALUE_WITHOUT_TRAILING_QUOTES#\"}"
     echo "${VARIABLE_VALUE_WITHOUT_LEADING_QUOTES}"
+}
+
+
+get_postgresql_connection_string(){
+    _user="${1:?Missing user}"
+    _password="${2:?Missing password}"
+    _host="${3:?Missing host}"
+    _port="${4:?Missing port}"
+    _db="${5:-}"
+    _driver="${6:-}"
+    [ "${_db}" != "" ] && _db="/${_db}"
+    [ "${_driver}" != "" ] && _driver="+${_driver}"
+    echo "postgresql${_driver}://${_user}:${_password}@${_host}:${_port}${_db}"
 }
