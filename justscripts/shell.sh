@@ -115,3 +115,10 @@ set_secret(){
   create_file_if_it_does_not_exist  "${secret_file}"
   echo "${secret}" > "${secret_file}"
 }
+
+
+get_secret(){
+  local name="${1:?Secret name not passed}"
+  local secret_file=".secret/${name}"
+  [ -e  "${secret_file}" ] && cat "${secret_file}"
+}

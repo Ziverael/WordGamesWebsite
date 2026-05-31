@@ -27,6 +27,8 @@ init_project(){
     init_local_venv
     create_or_update_dotenv
     define_secrets
+    # Those steps are just only used in development
+    rebuild_db
 }
 
 refresh_project(){
@@ -36,6 +38,7 @@ refresh_project(){
     create_or_update_dotenv
     rebuild_project_image
     start_project_services
+    start_dev_container_and_apply_migrations
 }
 
 rebuild_project(){
@@ -195,4 +198,15 @@ create_default_directories_and_files(){
         echo_default "$(grep -v '^$' "${TMP_FILE}")"
     fi
     rm -f "${TMP_FILE}"
+}
+
+
+start_dev_container_and_apply_migrations () {
+  if [ "$(podman_container_is_running wordgames-db)" = "false" ]
+  then
+    echo_title "Starting db..."
+    podman-compose -f "docker-compose-${ENV}.yaml" up wordgames-db -d
+  fi
+  start_dev_helper
+  podman-compose -f "docker-compose-${ENV}.yaml" exec wordgames-dev-helper bash -c "uv run run alembic upgrade head"
 }
