@@ -1,8 +1,16 @@
 from flask import Flask, render_template
+from flask_sqlalchemy import SQLAlchemy
+from flask_wtf.csrf import CSRFProtect
+
+from word_games.database import BaseTable
 
 
 def page_not_found(_error):
     return render_template("error.html"), 404
+
+
+csrf = CSRFProtect()
+db = SQLAlchemy(model_class=BaseTable)
 
 
 def create_app():
@@ -12,6 +20,9 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(APP_SETTINGS)
     app.register_error_handler(404, page_not_found)
+
+    db.init_app(app)
+    csrf.init_app(app)
 
     from word_games.view.main import main as main_bp
 

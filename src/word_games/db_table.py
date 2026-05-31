@@ -12,3 +12,12 @@ class GameTable(BaseTable):
     created_at: Mapped[datetime]
     creator: Mapped[int]
     content: Mapped[dict] = mapped_column(JSON)
+
+
+class TaskTable(BaseTable):
+    id: Mapped[int] = mapped_column(primary_key=True)
+    game_id: Mapped[int]
+    assignee_id: Mapped[int]
+    created_at: Mapped[datetime]
+    viewed_at: Mapped[datetime | None]
+    recently_viewed_at: Mapped[datetime | None]

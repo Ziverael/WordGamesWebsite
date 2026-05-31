@@ -4,4 +4,4 @@ Don't import anything from this file.
 """
 # ruff: noqa: F401
 
-from word_games.db_table import GameTable
+from word_games.db_table import GameTable, TaskTable
