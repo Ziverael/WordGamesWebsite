@@ -5,8 +5,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class _AppSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="app_")
 
-    secret_key: str = Field(min_length=1)
-    sqlalchemy_database_uri: str = Field(min_length=1)
+    SECRET_KEY: str = Field(min_length=1)
+    SQLALCHEMY_DATABASE_URI: str = Field(min_length=1)
 
 
 APP_SETTINGS = _AppSettings()

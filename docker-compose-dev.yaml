@@ -43,6 +43,7 @@ services:
       - ./migration:/opt/word_games/migration:Z
       - ./alembic.ini:/opt/word_games/alembic.ini:Z
     # dev-only
+      - ./.local/coverage:/opt/word_games/coverage:Z
       - ./.local/.bash_history:/opt/word_games/.bash_history:Z
       - ./playground:/opt/word_games/playground:Z
 
@@ -82,6 +83,14 @@ services:
     command: "echo Project start successfully"
     depends_on:
       wordgames-app:
+        condition: service_healthy
+
+  start-tests-services:
+    container_name: start-tests-services
+    image: busybox
+    command: ["sh", "-c", "echo DB is healthy"]
+    depends_on:
+      wordgames-db:
         condition: service_healthy
 
 networks:

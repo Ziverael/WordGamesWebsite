@@ -45,3 +45,6 @@ def deserialize(token: bytes):
         raise TokenError(msg) from e
     else:
         return output
+
+
+# TODO: implement url_has_allowed_host_and_scheme: https://github.com/django/django/blob/4.0/django/utils/http.py#L239  # noqa: FIX002

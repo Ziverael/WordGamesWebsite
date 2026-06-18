@@ -1,8 +1,8 @@
 from flask import Flask, render_template
-from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
 
-from word_games.database import BaseTable
+from word_games.db import get_session, register_db_cleanup
 
 
 def page_not_found(_error):
@@ -10,7 +10,18 @@ def page_not_found(_error):
 
 
 csrf = CSRFProtect()
-db = SQLAlchemy(model_class=BaseTable)
+
+login_manager = LoginManager()
+login_manager.login_view = "word_games.view.auth.login"
+
+
+from word_games.db_table import User
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    session = get_session()
+    return session.get(User, int(user_id))
 
 
 def create_app():
@@ -21,8 +32,10 @@ def create_app():
     app.config.from_object(APP_SETTINGS)
     app.register_error_handler(404, page_not_found)
 
-    db.init_app(app)
     csrf.init_app(app)
+    login_manager.init_app(app)
+
+    register_db_cleanup(app)
 
     from word_games.view.main import main as main_bp
 

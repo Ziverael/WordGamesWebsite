@@ -1,18 +1,18 @@
 from datetime import datetime
 
 from flask_login import UserMixin
-from sqlalchemy import JSON, String
+from sqlalchemy import JSON, Index, String
 from sqlalchemy.orm import Mapped, mapped_column
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from word_games import db
 from word_games.database import BaseTable
+from word_games.db import get_session
 from word_games.error import TokenError
 from word_games.model import Role
 from word_games.utils import TZ_UTC, deserialize, serialize
 
 
-class GameTable(BaseTable):
+class Game(BaseTable):
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str]
     created_at: Mapped[datetime]
@@ -20,7 +20,7 @@ class GameTable(BaseTable):
     content: Mapped[dict] = mapped_column(JSON)
 
 
-class TaskTable(BaseTable):
+class Task(BaseTable):
     id: Mapped[int] = mapped_column(primary_key=True)
     game_id: Mapped[int]
     assignee_id: Mapped[int]
@@ -29,14 +29,19 @@ class TaskTable(BaseTable):
     recently_viewed_at: Mapped[datetime | None]
 
 
-class UserTable(BaseTable, UserMixin):
+class User(BaseTable, UserMixin):
     id: Mapped[int] = mapped_column(primary_key=True)
-    email: Mapped[str] = mapped_column(String(64), unique=True, index=True)
-    username: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    email: Mapped[str] = mapped_column(String(64))
+    username: Mapped[str] = mapped_column(String(64))
     role: Mapped[Role]
     password_hash: Mapped[str] = mapped_column(String(128))
     confirmed: Mapped[bool] = mapped_column(default=False)
     last_seen = Mapped[datetime]
+
+    __table_args__ = (
+        Index("idx_user_email", email, unique=True),
+        Index("idx_user_username", username, unique=True),
+    )
 
     @property
     def password(self):
@@ -62,7 +67,8 @@ class UserTable(BaseTable, UserMixin):
             if data.get("confirm") != self.id:
                 return False
             self.confirmed = True
-            db.session.add(self)
+            session = get_session()
+            session.add(self)
             return True
 
     def generate_reset_token(self):
@@ -74,11 +80,13 @@ class UserTable(BaseTable, UserMixin):
             data = deserialize(token)
         except TokenError:
             return False
-        user = UserTable.query.get(data.get("reset"))
+        user = User.query.get(data.get("reset"))
         if user is None:
             return False
         user.password = new_password
-        db.session.add(user)
+
+        session = get_session()
+        session.add(user)
         return True
 
     def generate_email_change_token(self, new_email: str):
@@ -98,12 +106,14 @@ class UserTable(BaseTable, UserMixin):
             return False
         self.email = new_email
         self.avatar_hash = self.gravatar_hash()
-        db.session.add(self)
+        session = get_session()
+        session.add(self)
         return True
 
     def ping(self):
         self.last_seen = datetime.now(TZ_UTC)
-        db.session.add(self)
+        session = get_session()
+        session.add(self)
 
     def generate_auth_token(self):
         return serialize({"id": self.id})
@@ -115,7 +125,7 @@ class UserTable(BaseTable, UserMixin):
         except TokenError:
             return None
         else:
-            return UserTable.query.get(data["id"])
+            return User.query.get(data["id"])
 
     def __repr__(self):
         return f"<User {self.username}>"

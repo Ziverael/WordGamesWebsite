@@ -8,7 +8,7 @@ from wtforms import (
 )
 from wtforms.validators import DataRequired, Email, EqualTo, Length, Regexp
 
-from word_games.model import User  # type: ignore[attr-defined]
+from word_games.db_table import User
 
 
 class LoginForm(FlaskForm):
@@ -41,10 +41,12 @@ class RegistrationForm(FlaskForm):
         "Password",
         validators=[
             DataRequired(),
-            EqualTo("password2", message="Passwords must match."),
+            EqualTo("password_check", message="Passwords must match."),
         ],
     )
-    password2 = PasswordField("Confirm password", validators=[DataRequired()])
+    password_check = PasswordField(
+        "Confirm password", validators=[DataRequired()]
+    )
     submit = SubmitField("Register")
 
     def validate_email(self, field):
@@ -64,13 +66,18 @@ class ChangePasswordForm(FlaskForm):
         "New password",
         validators=[
             DataRequired(),
-            EqualTo("password2", message="Passwords must match."),
+            EqualTo("password_new", message="Passwords must match."),
         ],
     )
-    password2 = PasswordField(
+    password_enw = PasswordField(
         "Confirm new password", validators=[DataRequired()]
     )
     submit = SubmitField("Update Password")
+
+    def validate_new_password(self, field):
+        if field.data == self.old_password.data:
+            msg = "New password must be different from old password."
+            raise ValidationError(msg)
 
 
 class PasswordResetRequestForm(FlaskForm):
@@ -85,10 +92,12 @@ class PasswordResetForm(FlaskForm):
         "New Password",
         validators=[
             DataRequired(),
-            EqualTo("password2", message="Passwords must match"),
+            EqualTo("password_new", message="Passwords must match"),
         ],
     )
-    password2 = PasswordField("Confirm password", validators=[DataRequired()])
+    password_new = PasswordField(
+        "Confirm password", validators=[DataRequired()]
+    )
     submit = SubmitField("Reset Password")
 
 

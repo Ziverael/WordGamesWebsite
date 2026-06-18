@@ -2,6 +2,7 @@
 # shellcheck disable=SC2015
 # shellcheck disable=SC2120
 # shellcheck disable=SC1091
+. justscripts/database.sh
 . justscripts/env.sh
 . justscripts/setup.sh
 . justscripts/shell.sh
@@ -130,20 +131,35 @@ show_ruff_hints_if_error_encountered () {
 }
 
 test_code () {
-    TEST_PATH="${1:-./tests}"
+    _test_path="${1:-./tests}"
+    _use_db="${2:-false}"
+    _opts="${3}"
     echo_title "Starting tests with pytest..."
-    OPTS="${3}"
-    OPTS="${OPTS} --cov ."
-    OPTS="${OPTS} --cov-report html:.local/coverage/htmlcov"
-    OPTS="${OPTS} --cov-report xml:.local/coverage/coverage.xml"
-    OPTS="${OPTS} --cache-clear"
-    OPTS="${OPTS} --pyargs ${TEST_PATH}"
-    uv  run pytest ${OPTS}
-    echo "Coverage report available at $(pwd).local/coverage/htmlcov/index.html."
+    start_dev_helper
+    _opts_="${_opts} --cov word_games"
+    _opts="${_opts} --cov-report html:coverage/htmlcov"
+    _opts="${_opts} --cov-report xml:coverage/coverage.xml"
+    _opts="${_opts} --cache-clear"
+    _opts="${_opts} --pyargs ${_test_path}"
+    if [ "${_use_db}" = "false" ];then
+        podman-compose -f "docker-compose-${ENV}.yaml" exec wordgames-app-dev-helper uv run --no-sync pytest ${_opts}
+    else
+        _connection_string="$(get_postgresql_connection_string \
+            "test_$(get_variable_from_dotenv_file "DATABASE_USER")" \
+            "$(get_secret "db_user_password")" \
+            "wordgames-db" \
+            "$(get_variable_from_dotenv_file "DATABASE_PORT")" \
+            "test_$(get_variable_from_dotenv_file "DATABASE_USER")" \
+            "psycopg" \
+        )"
+        podman-compose -f "docker-compose-${ENV}.yaml" exec -e  APP_SQLALCHEMY_DATABASE_URI="${_connection_string}" wordgames-app-dev-helper uv run --no-sync pytest ${_opts}
+    fi
+    echo "Coverage report available at $(pwd)/.local/coverage/htmlcov/index.html."
 }
 
 start_bash_session(){
     start_dev_helper
+    echo "${LOCAL_DB_CONNECTION_STRING}"
     podman-compose -f "docker-compose-${ENV}.yaml" exec wordgames-app-dev-helper bash
 }
 
@@ -202,11 +218,28 @@ create_default_directories_and_files(){
 
 
 start_dev_container_and_apply_migrations () {
-  if [ "$(podman_container_is_running wordgames-db)" = "false" ]
-  then
-    echo_title "Starting db..."
-    podman-compose -f "docker-compose-${ENV}.yaml" up wordgames-db -d
-  fi
-  start_dev_helper
-  podman-compose -f "docker-compose-${ENV}.yaml" exec wordgames-dev-helper bash -c "uv run run alembic upgrade head"
+    _connection_string="${1:-default}"
+    [ "${_connection_string}" = "default" ] && echo "Using default connection string" && _connection_string="$(get_variable_from_dotenv_file "APP_SQLALCHEMY_DATABASE_URI")"
+    start_service_if_it_is_not_running "wordgames-db" "docker-compose-${ENV}.yaml"
+    start_dev_helper
+    podman-compose -f "docker-compose-${ENV}.yaml" exec -e APP_SQLALCHEMY_DATABASE_URI="${_connection_string}" wordgames-app-dev-helper  bash -c "uv run alembic upgrade head"
+}
+
+setup_db_for_tests(){
+    start_tests_services
+    setup_tests_database
+    start_dev_container_and_apply_migrations "$(get_postgresql_connection_string \
+    "test_$(get_variable_from_dotenv_file "DATABASE_USER")" \
+    "$(get_secret "db_user_password")" \
+    "wordgames-db" \
+    "$(get_variable_from_dotenv_file "DATABASE_PORT")" \
+    "test_$(get_variable_from_dotenv_file "DATABASE_USER")" \
+    "psycopg" \
+)"
+}
+
+start_tests_services(){
+    echo_title "Starting tests services..."
+    start_service_if_it_is_not_running wordgames-db docker-compose-${ENV}.yaml
+    start_service_if_it_is_not_running start-tests-services docker-compose-${ENV}.yaml
 }

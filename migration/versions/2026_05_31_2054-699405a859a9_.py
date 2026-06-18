@@ -18,6 +18,8 @@ down_revision: str | Sequence[str] | None = "ff86ff1cb39b"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
+role_enum = sa.Enum("teacher", "student", name="role")
+
 
 def upgrade() -> None:
     """Upgrade schema."""
@@ -27,9 +29,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("email", sa.String(length=64), nullable=False),
         sa.Column("username", sa.String(length=64), nullable=False),
-        sa.Column(
-            "role", sa.Enum("teacher", "student", name="role"), nullable=False
-        ),
+        sa.Column("role", role_enum, nullable=False),
         sa.Column("password_hash", sa.String(length=128), nullable=False),
         sa.Column("confirmed", sa.Boolean(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
@@ -47,4 +47,5 @@ def downgrade() -> None:
     op.drop_index(op.f("idx_user_username"), table_name="user")
     op.drop_index(op.f("idx_user_email"), table_name="user")
     op.drop_table("user")
+    role_enum.drop(op.get_bind())
     # ### end Alembic commands ###
