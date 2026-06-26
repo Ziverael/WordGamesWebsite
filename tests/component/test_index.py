@@ -1,3 +1,4 @@
+import pytest
 from flask_login import current_user
 
 
@@ -15,11 +16,17 @@ class TestIndex:
         assert template.name == "index.html"
         assert context["current_user"].is_authenticated is False
 
+    @pytest.mark.parametrize("confirmed", [True, False])
     def test_request_with_logged_in_user(
-        self, app, db_session, captured_templates, user_factory
+        self,
+        app,
+        db_session,
+        captured_templates,
+        user_factory,
+        confirmed: bool,
     ):
         # given
-        user = user_factory.build(id=1)
+        user = user_factory.build(id=1, confirmed=confirmed)
         db_session.add(user)
         db_session.commit()
 

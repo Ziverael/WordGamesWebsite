@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from flask_login import UserMixin
-from sqlalchemy import JSON, Index, String
+from sqlalchemy import Index, String
 from sqlalchemy.orm import Mapped, mapped_column
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -10,23 +10,6 @@ from word_games.db import get_session
 from word_games.error import TokenError
 from word_games.model import Role
 from word_games.utils import TZ_UTC, deserialize, serialize
-
-
-class Game(BaseTable):
-    id: Mapped[int] = mapped_column(primary_key=True)
-    title: Mapped[str]
-    created_at: Mapped[datetime]
-    creator: Mapped[int]
-    content: Mapped[dict] = mapped_column(JSON)
-
-
-class Task(BaseTable):
-    id: Mapped[int] = mapped_column(primary_key=True)
-    game_id: Mapped[int]
-    assignee_id: Mapped[int]
-    created_at: Mapped[datetime]
-    viewed_at: Mapped[datetime | None]
-    recently_viewed_at: Mapped[datetime | None]
 
 
 class User(BaseTable, UserMixin):

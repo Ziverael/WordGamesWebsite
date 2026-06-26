@@ -1,3 +1,5 @@
+from functools import wraps
+
 from .forms import (
     ChangeEmailForm,
     ChangePasswordForm,
@@ -10,22 +12,18 @@ from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 
 from word_games import db
-from word_games.db_table import User
+from word_games.user.db import User
 from word_games.view.auth import auth
 
 
-@auth.before_app_request
-def before_request():
-    if current_user.is_authenticated:
-        current_user.ping()
-        if (
-            not current_user.confirmed
-            and request.endpoint
-            and request.blueprint != "auth"
-            and request.endpoint != "static"
-        ):
+def confirmed_required(view):
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+        if current_user.is_authenticated and not current_user.confirmed:
             return redirect(url_for("auth.unconfirmed"))
-    return None
+        return view(*args, **kwargs)
+
+    return wrapped
 
 
 @auth.route("/unconfirmed")

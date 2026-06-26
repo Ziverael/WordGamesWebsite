@@ -1,15 +1,18 @@
 import pytest
-from flask import template_rendered
+from flask import g, template_rendered
 from flask.ctx import AppContext
 from flask.testing import FlaskClient
 from flask_login import FlaskLoginClient
 from polyfactory.factories.sqlalchemy_factory import SQLAlchemyFactory
 from polyfactory.pytest_plugin import register_fixture
+from sqlalchemy.orm import sessionmaker
 
 from word_games import create_app
 from word_games.config.app import APP_SETTINGS
-from word_games.db import SessionFactory, get_engine
-from word_games.db_table import Game, Task, User
+from word_games.db import get_engine
+from word_games.game.db import Game
+from word_games.task.db import Task
+from word_games.user.db import User
 
 
 @pytest.fixture(autouse=True)
@@ -48,18 +51,29 @@ def runner(app):
 
 @pytest.fixture
 def db_session():
-    # setup
+    """This should be fixed. Actually there are 3 independent sessions their
+    concurring in tests: this one, Flask Login Client session and session from
+    flask.g
+    """
     connection = get_engine().connect()
     transaction = connection.begin()
-    session = SessionFactory()
+
+    Session = sessionmaker(bind=connection)
+    session = Session()
 
     yield session
 
-    # teardown
-    session.rollback()
     session.close()
     transaction.rollback()
     connection.close()
+
+
+@pytest.fixture(autouse=True)
+def app_db_session(app, db_session):
+    with app.app_context():
+        g.db_session = db_session
+        yield
+        g.pop("db_session", None)
 
 
 @pytest.fixture

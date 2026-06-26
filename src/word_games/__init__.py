@@ -15,7 +15,7 @@ login_manager = LoginManager()
 login_manager.login_view = "word_games.view.auth.login"
 
 
-from word_games.db_table import User
+from word_games.user.db import User
 
 
 @login_manager.user_loader
