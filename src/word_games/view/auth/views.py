@@ -41,6 +41,8 @@ def login():
     argument. Then this redirection will be ignored, and user will be redirected
     to the index.
     """
+    flash("Login successful!", "success")
+    flash("Invalid email or password", "error")
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data.lower()).first()

@@ -12,10 +12,5 @@ document.addEventListener("DOMContentLoaded", () => {
         card.addEventListener("mouseleave", () => {
             card.style.transform = "translateY(0)";
         });
-    });
-
-    // Login button demo action
-    document.querySelector(".login-btn").addEventListener("click", () => {
-        alert("Login clicked (hook your auth here)");
-    });
+    })
 });
