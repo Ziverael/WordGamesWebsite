@@ -23,18 +23,43 @@
             <a href="{{ url_for('main.index') }}">WordGames</a>
         </div>
         {% if current_user.username %}
-            <a href="{{ url_for('auth.logout') }}">
-                <button class="login-btn">
-                    Logout
-                </button>
-            </a>
-
-        {% else %}
+        <!-- TODO: url_for(user.profile) -->
+        <div>
             <a href="{{ url_for('auth.login') }}">
                 <button class="login-btn">
-                    Login
+                    Profile
                 </button>
             </a>
+            {% if request.blueprint == 'auth' %}
+                <a href="{{ url_for('auth.logout') }}">
+                    <button class="login-btn" hidden>
+                        Logout
+                    </button>
+                </a>
+            {% else %}
+                <a href="{{ url_for('auth.logout') }}">
+                    <button class="login-btn">
+                        Logout
+                    </button>
+                </a>
+            {% endif %}
+
+        </div>
+
+        {% else %}
+            {% if request.blueprint == 'auth' %}
+                <a href="{{ url_for('auth.login') }}">
+                    <button class="login-btn" hidden>
+                        Login
+                    </button>
+                </a>
+            {% else %}
+                <a href="{{ url_for('auth.login') }}">
+                    <button class="login-btn">
+                        Login
+                    </button>
+                </a>
+            {% endif %}
         {% endif %}
     </header>
 
@@ -76,4 +101,6 @@
     </footer>
 </body>
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+{% block scripts %}
+{% endblock %}
 </html>
