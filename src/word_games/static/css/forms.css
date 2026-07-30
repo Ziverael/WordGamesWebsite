@@ -101,3 +101,12 @@ select:focus {
 .checkbox input:checked + .checkmark::after {
     display: block;
 }
+
+#password-rules div {
+    color: #dc3545;
+    margin: 5px 0;
+}
+
+#password-rules div.valid {
+    color: #198754;
+}
