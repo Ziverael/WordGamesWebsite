@@ -152,7 +152,7 @@ test_code () {
             "test_$(get_variable_from_dotenv_file "DATABASE_USER")" \
             "psycopg" \
         )"
-        podman-compose -f "docker-compose-${ENV}.yaml" exec -e  APP_SQLALCHEMY_DATABASE_URI="${_connection_string}" wordgames-app-dev-helper uv run --no-sync pytest ${_opts}
+        podman-compose -f "docker-compose-${ENV}.yaml" exec -e  DATABASE_CONNECTION_STRING="${_connection_string}" wordgames-app-dev-helper uv run --no-sync pytest ${_opts}
     fi
     echo "Coverage report available at $(pwd)/.local/coverage/htmlcov/index.html."
 }
@@ -219,10 +219,10 @@ create_default_directories_and_files(){
 
 start_dev_container_and_apply_migrations () {
     _connection_string="${1:-default}"
-    [ "${_connection_string}" = "default" ] && echo "Using default connection string" && _connection_string="$(get_variable_from_dotenv_file "APP_SQLALCHEMY_DATABASE_URI")"
+    [ "${_connection_string}" = "default" ] && echo "Using default connection string" && _connection_string="$(get_variable_from_dotenv_file "DATABASE_CONNECTION_STRING")"
     start_service_if_it_is_not_running "wordgames-db" "docker-compose-${ENV}.yaml"
     start_dev_helper
-    podman-compose -f "docker-compose-${ENV}.yaml" exec -e APP_SQLALCHEMY_DATABASE_URI="${_connection_string}" wordgames-app-dev-helper  bash -c "uv run alembic upgrade head"
+    podman-compose -f "docker-compose-${ENV}.yaml" exec -e DATABASE_CONNECTION_STRING="${_connection_string}" wordgames-app-dev-helper  bash -c "uv run alembic upgrade head"
 }
 
 setup_db_for_tests(){

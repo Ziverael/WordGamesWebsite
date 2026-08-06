@@ -9,7 +9,9 @@ from word_games.database import BaseTable
 
 
 config = context.config
-config.set_main_option("sqlalchemy.url", APP_SETTINGS.SQLALCHEMY_DATABASE_URI)
+config.set_main_option(
+    "sqlalchemy.url", APP_SETTINGS.database_connection_string
+)
 
 
 # this is the Alembic Config object, which provides

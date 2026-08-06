@@ -20,7 +20,15 @@ services:
     user: root
     environment:
       APP_SECRET_KEY: ${APP_SECRET_KEY}
-      APP_SQLALCHEMY_DATABASE_URI: ${APP_SQLALCHEMY_DATABASE_URI}
+      APP_ENV: ${APP_ENV}
+      DATABASE_CONNECTION_STRING: ${DATABASE_CONNECTION_STRING}
+      SMTP_SERVER: ${SMTP_SERVER}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USE_TLS: ${SMTP_USE_TLS}
+      SMTP_USE_SSL: ${SMTP_USE_SSL}
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_DEFAULT_SENDER: ${SMTP_DEFAULT_SENDER}
     command: uv run flask --app word_games run --debug --port=8000 --host=0.0.0.0
     ports:
       - 127.0.0.1:58127:8000
@@ -37,8 +45,17 @@ services:
     stdin_open: true
     environment:
       HISTFILE: "/opt/word_games/.bash_history"
+      APP_ENV: ${APP_ENV}
       APP_SECRET_KEY: ${APP_SECRET_KEY}
-      APP_SQLALCHEMY_DATABASE_URI: ${APP_SQLALCHEMY_DATABASE_URI}
+      DATABASE_CONNECTION_STRING: ${DATABASE_CONNECTION_STRING}
+      SMTP_SERVER: ${SMTP_SERVER}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USE_TLS: ${SMTP_USE_TLS}
+      SMTP_USE_SSL: ${SMTP_USE_SSL}
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_DEFAULT_SENDER: ${SMTP_DEFAULT_SENDER}
+      SMTP_WEB_UI: ${SMTP_WEB_UI}
     volumes:
       - ./src:/opt/word_games/src:Z
       - ./tests:/opt/word_games/tests:Z
@@ -78,6 +95,23 @@ services:
     secrets:
       - db_user_password
 
+  wordgames-smtp:
+    container_name: wordgames-smtp
+    image: ${DEV_SMTP_IMAGE}
+    restart: unless-stopped
+    volumes:
+        - ./.local/smtp:/data
+    ports:
+      - "127.0.0.1:${SMTP_PORT}:${SMTP_PORT}"
+      - "127.0.0.1:${SMTP_WEB_UI}:${SMTP_WEB_UI}"
+    environment:
+        MP_UI_BIND_ADDR: "0.0.0.0:${SMTP_WEB_UI}"
+        MP_SMTP_BIND_ADDR: "0.0.0.0:${SMTP_PORT}"
+        MP_MAX_MESSAGES: 5000
+        MP_DATABASE: /data/mailpit.db
+        MP_SMTP_AUTH_ACCEPT_ANY: 1
+        MP_SMTP_AUTH_ALLOW_INSECURE: 1
+
   # Jobs
   start-project-services:
     container_name: start-project-services
@@ -86,6 +120,10 @@ services:
     depends_on:
       wordgames-app:
         condition: service_healthy
+      wordgames-db:
+        condition: service_healthy
+      wordgames-smtp:
+        condition: service_healthy
 
   start-tests-services:
     container_name: start-tests-services
@@ -93,6 +131,8 @@ services:
     command: ["sh", "-c", "echo DB is healthy"]
     depends_on:
       wordgames-db:
+        condition: service_healthy
+      wordgames-smtp:
         condition: service_healthy
 
 networks:

@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 from functools import lru_cache
 
 from flask import g
@@ -26,10 +27,16 @@ def create_session_factory(engine):
 SessionFactory = create_session_factory(get_engine())
 
 
+@contextmanager
 def get_session():
     if "db_session" not in g:
         g.db_session = SessionFactory()
-    return g.db_session
+    try:
+        yield g.db_session
+        g.db_session.commit()
+    except Exception:
+        g.db_session.rollback()
+        raise
 
 
 def register_db_cleanup(app):

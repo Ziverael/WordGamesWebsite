@@ -7,9 +7,7 @@ class _DatabaseSettings(BaseSettings):
 
     pool_size: PositiveInt = 10
     max_overflow: PositiveInt = 20
-    connection_string: str = Field(
-        min_length=1, alias="APP_SQLALCHEMY_DATABASE_URI"
-    )
+    connection_string: str = Field(min_length=1)
 
 
 DATABASE_SETTINGS = _DatabaseSettings()

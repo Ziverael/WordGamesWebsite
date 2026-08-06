@@ -9,15 +9,16 @@ from word_games.database import BaseTable
 from word_games.db import get_session
 from word_games.error import TokenError
 from word_games.model import Role
-from word_games.utils import TZ_UTC, deserialize, serialize
+from word_games.token.controller import deserialize, serialize
+from word_games.utils import TZ_UTC
 
 
 class User(BaseTable, UserMixin):
     id: Mapped[int] = mapped_column(primary_key=True)
-    email: Mapped[str] = mapped_column(String(64))
-    username: Mapped[str] = mapped_column(String(64))
-    role: Mapped[Role]
-    password_hash: Mapped[str] = mapped_column(String(128))
+    email: Mapped[str] = mapped_column(String(64), nullable=False)
+    username: Mapped[str] = mapped_column(String(64), nullable=False)
+    role: Mapped[Role] = mapped_column(nullable=False)
+    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     confirmed: Mapped[bool] = mapped_column(default=False)
     last_seen = Mapped[datetime]
 
@@ -39,7 +40,7 @@ class User(BaseTable, UserMixin):
         return check_password_hash(self.password_hash, password)
 
     def generate_confirmation_token(self):
-        return serialize({"confirm": self.id})
+        return serialize({"user_id": self.id, "purpose": "confirm_account"})
 
     def confirm(self, token) -> bool:
         try:
@@ -47,18 +48,21 @@ class User(BaseTable, UserMixin):
         except TokenError:
             return False
         else:
-            if data.get("confirm") != self.id:
+            if (
+                data.get("purpose") != "confirm_account"
+                and data.get("user_id") != self.id
+            ):
                 return False
             self.confirmed = True
-            session = get_session()
-            session.add(self)
+            with get_session() as session:
+                session.add(self)
             return True
 
     def generate_reset_token(self):
         return serialize({"reset": self.id})
 
     @staticmethod
-    def reset_password(token: bytes, new_password: str):
+    def reset_password(token: str, new_password: str):
         try:
             data = deserialize(token)
         except TokenError:
@@ -68,14 +72,14 @@ class User(BaseTable, UserMixin):
             return False
         user.password = new_password
 
-        session = get_session()
-        session.add(user)
+        with get_session() as session:
+            session.add(user)
         return True
 
     def generate_email_change_token(self, new_email: str):
         return serialize({"change_email": self.id, "new_email": new_email})
 
-    def change_email(self, token: bytes):
+    def change_email(self, token: str):
         try:
             data = deserialize(token)
         except TokenError:
@@ -89,20 +93,20 @@ class User(BaseTable, UserMixin):
             return False
         self.email = new_email
         self.avatar_hash = self.gravatar_hash()
-        session = get_session()
-        session.add(self)
+        with get_session() as session:
+            session.add(self)
         return True
 
     def ping(self):
         self.last_seen = datetime.now(TZ_UTC)
-        session = get_session()
-        session.add(self)
+        with get_session() as session:
+            session.add(self)
 
     def generate_auth_token(self):
         return serialize({"id": self.id})
 
     @staticmethod
-    def verify_auth_token(token: bytes):
+    def verify_auth_token(token: str):
         try:
             data = deserialize(token)
         except TokenError:

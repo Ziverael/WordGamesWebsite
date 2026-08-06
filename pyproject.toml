@@ -18,6 +18,8 @@ dependencies = [
     "psycopg[binary,pool]>=3.3.4",
     "polyfactory>=3.3.0",
     "email-validator>=2.3.0",
+    "resend==2.34.0",
+    "flask-mail==0.10.0",
 ]
 requires-python=">= 3.12, <3.13"
 
@@ -86,6 +88,9 @@ convention = "numpy"
     "D",
     "PLC0415", # Flask app is explicitly dynamic
     "E402", # Blueprint must be before modular imports
+]
+"src/word_games/extensions.py" = [
+    "PLC0415", # Flask app is explicitly dynamic
 ]
 "migration/*" = [
     "INP001",  #  File `migration/env.py` is part of an implicit namespace package. Add an `__init__.py`.

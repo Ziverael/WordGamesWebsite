@@ -1,4 +1,4 @@
-from functools import wraps
+from fnmatch import fnmatch
 
 from .forms import (
     ChangeEmailForm,
@@ -8,22 +8,44 @@ from .forms import (
     PasswordResetRequestForm,
     RegistrationForm,
 )
-from flask import flash, redirect, render_template, request, url_for
+from flask import (
+    flash,
+    redirect,
+    render_template,
+    request,
+    url_for,
+)
 from flask_login import current_user, login_required, login_user, logout_user
 
-from word_games import db
+from word_games.config.smtp import SMTP_SETTINGS
+from word_games.db import get_session
+from word_games.email.controller import send_email
 from word_games.user.db import User
 from word_games.view.auth import auth
 
 
-def confirmed_required(view):
-    @wraps(view)
-    def wrapped(*args, **kwargs):
-        if current_user.is_authenticated and not current_user.confirmed:
-            return redirect(url_for("auth.unconfirmed"))
-        return view(*args, **kwargs)
+ALLOWED_ENDPOINTS = [
+    "auth.*",
+    "static",
+    "main.index",
+]
 
-    return wrapped
+
+def endpoint_allowed(endpoint):
+    if endpoint is None:
+        return False
+    return any(fnmatch(endpoint, pattern) for pattern in ALLOWED_ENDPOINTS)
+
+
+@auth.before_app_request
+def before_request():
+    if (
+        current_user.is_authenticated
+        and not current_user.confirmed
+        and not endpoint_allowed(request.endpoint)
+    ):
+        return redirect(url_for("auth.unconfirmed"))
+    return None
 
 
 @auth.route("/unconfirmed")
@@ -41,18 +63,18 @@ def login():
     argument. Then this redirection will be ignored, and user will be redirected
     to the index.
     """
-    flash("Login successful!", "success")
-    flash("Invalid email or password", "error")
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data.lower()).first()
+        with get_session() as session:
+            normed_email = form.email.data.lower()
+            user = session.query(User).filter_by(email=normed_email).first()
         if user is not None and user.verify_password(form.password.data):
             login_user(user, form.remember_me.data)
             next_ = request.args.get("next")
             if next_ is None or not next_.startswith("/"):
                 next_ = url_for("main.index")
             return redirect(next_)
-        flash("Invalid email or password.")
+        flash("Login failed.", "error")
     return render_template("auth/login.html", form=form)
 
 
@@ -60,7 +82,7 @@ def login():
 @login_required
 def logout():
     logout_user()
-    flash("You have been logged out.")
+    flash("You have been logged out.", "info")
     return redirect(url_for("main.index"))
 
 
@@ -72,16 +94,20 @@ def register():
             email=form.email.data.lower(),
             username=form.username.data,
             password=form.password.data,
+            role=form.role.data,
         )
-        db.session.add(user)
-        db.session.commit()
+        with get_session() as session:
+            session.add(user)
         token = user.generate_confirmation_token()
-        send_email(  # TODO: to implement  # noqa: F821,FIX002
-            user.email,
-            "Confirm Your Account",
-            "auth/email/confirm",
-            user=user,
-            token=token,
+        send_email(
+            recipients=[user.email],
+            sender=SMTP_SETTINGS.default_sender,
+            subject="Confirm Your Account",
+            html_body=render_template(
+                "auth/email/register.html",
+                user=user,
+                token=token,
+            ),
         )
         flash("A confirmation email has been sent to you by email.")
         return redirect(url_for("auth.login"))
@@ -94,7 +120,6 @@ def confirm(token):
     if current_user.confirmed:
         return redirect(url_for("main.index"))
     if current_user.confirm(token):
-        db.session.commit()
         flash("You have confirmed your account. Thanks!")
     else:
         flash("The confirmation link is invalid or has expired.")
@@ -105,12 +130,15 @@ def confirm(token):
 @login_required
 def resend_confirmation():
     token = current_user.generate_confirmation_token()
-    send_email(  # TODO: to implement  # noqa: F821,FIX002
-        current_user.email,
-        "Confirm Your Account",
-        "auth/email/confirm",
-        user=current_user,
-        token=token,
+    send_email(
+        recipients=[current_user.email],
+        sender=SMTP_SETTINGS.default_sender,
+        subject="Confirm Your Account",
+        html_body=render_template(
+            "auth/email/register.html",
+            user=current_user,
+            token=token,
+        ),
     )
     flash("A new confirmation email has been sent to you by email.")
     return redirect(url_for("main.index"))
@@ -123,8 +151,8 @@ def change_password():
     if form.validate_on_submit():
         if current_user.verify_password(form.old_password.data):
             current_user.password = form.password.data
-            db.session.add(current_user)
-            db.session.commit()
+            with get_session() as session:
+                session.add(current_user)
             flash("Your password has been updated.")
             return redirect(url_for("main.index"))
         flash("Invalid password.")
@@ -137,15 +165,20 @@ def password_reset_request():
         return redirect(url_for("main.index"))
     form = PasswordResetRequestForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data.lower()).first()
+        normed_email = form.email.data.lower()
+        with get_session() as session:
+            user = session.query(User).filter_by(email=normed_email).first()
         if user:
             token = user.generate_reset_token()
-            send_email(  # TODO: to implement  # noqa: F821,FIX002
-                user.email,
-                "Reset Your Password",
-                "auth/email/reset_password",
-                user=user,
-                token=token,
+            send_email(
+                recipients=[current_user.email],
+                sender=SMTP_SETTINGS.default_sender,
+                subject="Reset Your Password",
+                html_body=render_template(
+                    "auth/email/reset_password.html",
+                    user=current_user,
+                    token=token,
+                ),
             )
         flash(
             "An email with instructions to reset your password has been "
@@ -162,7 +195,6 @@ def password_reset(token):
     form = PasswordResetForm()
     if form.validate_on_submit():
         if User.reset_password(token, form.password.data):
-            db.session.commit()
             flash("Your password has been updated.")
             return redirect(url_for("auth.login"))
         return redirect(url_for("main.index"))
@@ -177,12 +209,16 @@ def change_email_request():
         if current_user.verify_password(form.password.data):
             new_email = form.email.data.lower()
             token = current_user.generate_email_change_token(new_email)
-            send_email(  # TODO: to implement  # noqa: F821,FIX002
-                new_email,
-                "Confirm your email address",
-                "auth/email/change_email",
-                user=current_user,
-                token=token,
+            send_email(
+                recipients=[new_email],
+                sender=SMTP_SETTINGS.default_sender,
+                subject="Reset Your Password",
+                html_body=render_template(
+                    "auth/email/change_password.html",
+                    user=current_user,
+                    token=token,
+                    old_email=current_user.email,
+                ),
             )
             flash(
                 "An email with instructions to confirm your new email "
@@ -197,7 +233,6 @@ def change_email_request():
 @login_required
 def change_email(token):
     if current_user.change_email(token):
-        db.session.commit()
         flash("Your email address has been updated.")
     else:
         flash("Invalid request.")
