@@ -9,19 +9,18 @@ repos:
       args: ['--maxkb=150']
 - repo: local
   hooks:
-    - id: pytest
-      name: Run tests
-      entry: just test
-      language: system
-      pass_filenames: false
-      files: \.py$
-      stages: [pre-commit]
-
     - id: format_and_check
       name: Check & Format
       entry: just format_and_check
       language: system
       pass_filenames: false
       require_serial: true
+      files: \.py$
+      stages: [pre-commit]
+    - id: pytest
+      name: Run tests
+      entry: just test
+      language: system
+      pass_filenames: false
       files: \.py$
       stages: [pre-commit]

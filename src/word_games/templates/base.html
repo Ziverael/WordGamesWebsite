@@ -10,9 +10,11 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- External CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename = '/css/styles.css') }}" type="text/css"/>
-	<link rel="stylesheet" href="{{ url_for('static', filename = '/css/vars.css') }}" type="text/css"/>
-
+    <link rel="stylesheet" href="{{ url_for('static', filename = 'css/styles.css') }}" type="text/css"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename = 'css/text.css') }}" type="text/css"/>
+	<link rel="stylesheet" href="{{ url_for('static', filename = 'css/vars.css') }}" type="text/css"/>
+    {% block css %}
+    {% endblock %}
 
 </head>
 <body>
@@ -20,11 +22,58 @@
         <div class="logo">
             <a href="{{ url_for('main.index') }}">WordGames</a>
         </div>
+        {% if current_user.username %}
+        <!-- TODO: url_for(user.profile) -->
+        <div>
+            <a href="{{ url_for('auth.login') }}">
+                <button class="login-btn">
+                    Profile
+                </button>
+            </a>
+            {% if request.blueprint == 'auth' %}
+                <a href="{{ url_for('auth.logout') }}">
+                    <button class="login-btn" hidden>
+                        Logout
+                    </button>
+                </a>
+            {% else %}
+                <a href="{{ url_for('auth.logout') }}">
+                    <button class="login-btn">
+                        Logout
+                    </button>
+                </a>
+            {% endif %}
 
-        <button class="login-btn">
-            Login
-        </button>
+        </div>
+
+        {% else %}
+            {% if request.blueprint == 'auth' %}
+                <a href="{{ url_for('auth.login') }}">
+                    <button class="login-btn" hidden>
+                        Login
+                    </button>
+                </a>
+            {% else %}
+                <a href="{{ url_for('auth.login') }}">
+                    <button class="login-btn">
+                        Login
+                    </button>
+                </a>
+            {% endif %}
+        {% endif %}
     </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div id="toast-container">
+            {% for category, message in messages %}
+                <div class="toast {{ category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
 
     <main class="main">
 		{% block main %}
@@ -52,4 +101,6 @@
     </footer>
 </body>
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+{% block scripts %}
+{% endblock %}
 </html>

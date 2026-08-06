@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% from "auth/macros.html" import render_errors %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename = 'css/forms.css') }}" type="text/css"/>
+{% endblock %}
+
+{% block main %}
+        <section class="glass-card">
+                <form method="POST" action="" novalidate>
+                    {% if form.is_submitted() and form.errors %}
+                        <div class="error-text">Login failed</div>
+                    {% endif%}
+                    {{ form.hidden_tag() }}
+                    <p>
+                        {{ form.email.label }}<br>
+                        {{ form.email(size=32) }}
+                        {{ render_errors(form.email) }}
+                    </p>
+                    <p>
+                        {{ form.password.label }}<br>
+                        {{ form.password(size=32) }}
+                        {{ render_errors(form.password) }}
+                    </p>
+                    <p>{{ form.remember_me() }} {{ form.remember_me.label }}</p>
+                    <p>{{ form.submit() }}</p>
+                </form>
+            Do not have an account? <a href="{{ url_for('auth.register') }}">Register now</a>.
+        </section>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div id="toast-container">
+            {% for category, message in messages %}
+                <div class="toast {{ category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+{% endblock %}

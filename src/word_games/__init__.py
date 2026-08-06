@@ -1,28 +1,39 @@
 from flask import Flask, render_template
-from flask_sqlalchemy import SQLAlchemy
-from flask_wtf.csrf import CSRFProtect
 
-from word_games.database import BaseTable
+from word_games.db import get_session, register_db_cleanup
+from word_games.email.app_init import get_email_service
+from word_games.extensions import extensions_manager
+from word_games.user.db import User
+
+
+@extensions_manager.login_manager.user_loader
+def load_user(user_id):
+    with get_session() as session:
+        return session.get(User, int(user_id))
 
 
 def page_not_found(_error):
     return render_template("error.html"), 404
 
 
-csrf = CSRFProtect()
-db = SQLAlchemy(model_class=BaseTable)
+extensions_manager.login_manager.login_view = "auth.login"
 
 
 def create_app():
     """Function factory"""
     from word_games.config.app import APP_SETTINGS
+    from word_games.config.smtp import SMTP_SETTINGS
 
     app = Flask(__name__)
-    app.config.from_object(APP_SETTINGS)
+    app.config.from_mapping(APP_SETTINGS.model_dump(by_alias=True))
+    app.config.update(**SMTP_SETTINGS.model_dump(by_alias=True))
     app.register_error_handler(404, page_not_found)
 
-    db.init_app(app)
-    csrf.init_app(app)
+    extensions_manager.csrf.init_app(app)
+    extensions_manager.login_manager.init_app(app)
+    app.extensions["email_service"] = get_email_service(app)
+
+    register_db_cleanup(app)
 
     from word_games.view.main import main as main_bp
 
@@ -35,5 +46,4 @@ def create_app():
     from word_games.view.creator import creator as creator_bp
 
     app.register_blueprint(creator_bp)
-
     return app

@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% from "auth/macros.html" import render_errors %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename = 'css/forms.css') }}" type="text/css"/>
+{% endblock %}
+
+
+{% block main %}
+<section class="glass-card hero">
+    <h1>Sign In</h1>
+    <p>
+        <form action="" method="post" novalidate>
+            {{ form.hidden_tag() }}
+            <p>
+                {{ form.email.label }}<br>
+                {{ form.email(size=32) }}
+                {{ render_errors(form.email) }}
+
+            </p>
+            <p>
+                {{ form.username.label }}<br>
+                {{ form.username(size=32) }}
+                {{ render_errors(form.username) }}
+
+            </p>
+            <p>
+                {{ form.role.label }}<br>
+                <p id="teacher-hint" style="display: none;">
+                    Additional authentication required for Teacher role.
+                </p>
+                {{ form.role }}
+                {{ render_errors(form.role) }}
+
+            </p>
+            <p>
+                {{ form.password.label }}<br>
+                {{ form.password(size=32) }}
+                {{ render_errors(form.password) }}
+                <div id="password-rules">
+                    <div data-rule="length">✗ At least 12 characters</div>
+                    <div data-rule="upper">✗ One uppercase letter</div>
+                    <div data-rule="lower">✗ One lowercase letter</div>
+                    <div data-rule="number">✗ One number</div>
+                    <div data-rule="special">✗ One special character</div>
+                    <div data-rule="space">✗ No spaces</div>
+                </div>
+
+            </p>
+            <p>
+                {{ form.password_check.label("Repeat the password") }}<br>
+                {{ form.password_check(size=32) }}
+                {{ render_errors(form.password_check) }}
+
+            </p>
+            <p>{{ form.submit() }}</p>
+        </form>
+    </p>
+</section>
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+const roleSelect = document.getElementById("{{ form.role.id }}");
+const teacherHint = document.getElementById("teacher-hint");
+
+function updateHint() {
+    teacherHint.style.display =
+        roleSelect.value === "teacher" ? "block" : "none";
+}
+
+roleSelect.addEventListener("change", updateHint);
+
+// Run once on page load in case "teacher" is already selected
+updateHint();
+
+const passwordInput = document.querySelector("#password");
+
+const rules = {
+    length: value => value.length >= 12,
+    upper: value => /[A-Z]/.test(value),
+    lower: value => /[a-z]/.test(value),
+    number: value => /\d/.test(value),
+    special: value => /[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\/~`]/.test(value),
+    space: value => !/\s/.test(value),
+};
+
+passwordInput.addEventListener("input", function () {
+    const value = this.value;
+
+    Object.entries(rules).forEach(([name, test]) => {
+        const element = document.querySelector(`[data-rule="${name}"]`);
+        const passed = test(value);
+
+        element.classList.toggle("valid", passed);
+        element.textContent = (passed ? "✓ " : "✗ ") +
+            element.textContent.substring(2);
+    });
+});
+</script>
+{% endblock %}

@@ -84,6 +84,12 @@ default_opts        := ''
 test test_path=default_test_path opts=default_opts:
     #!/usr/bin/env sh
     {{sh_init}}
+    setup_db_for_tests
+    test_code {{test_path}} "true" {{opts}}
+
+only_test test_path=default_test_path opts=default_opts:
+    #!/usr/bin/env sh
+    {{sh_init}}
     test_code {{test_path}} {{opts}}
 
 format_and_check: format check
@@ -120,6 +126,7 @@ alias f     := format
 alias fc    := format_and_check
 alias rb    := rebuild
 alias rf    := refresh
+alias ot     := only_test
 alias t     := test
 alias ud    := update_dotenv
 

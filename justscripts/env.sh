@@ -24,7 +24,7 @@ create_or_update_dotenv(){
         _db_host="$(get_variable_from_dotenv_file "DATABASE_HOST")"
         _db_port="$(get_variable_from_dotenv_file "DATABASE_PORT")"
         _db_name="$(get_variable_from_dotenv_file "DATABASE_USER")"
-        store_variable_in_dotenv_file "APP_SQLALCHEMY_DATABASE_URI" "$(get_postgresql_connection_string \
+        store_variable_in_dotenv_file "DATABASE_CONNECTION_STRING" "$(get_postgresql_connection_string \
         "${_db_user}" \
         "${_db_pass}" \
         "${_db_host}" \
@@ -40,7 +40,7 @@ create_or_update_dotenv(){
         restore_variable_in_dotenv_file DATABASE_HOST
         restore_variable_in_dotenv_file DATABASE_PORT
         restore_variable_in_dotenv_file APP_SECRET_KEY
-        restore_variable_in_dotenv_file APP_SQLALCHEMY_DATABASE_URI
+        restore_variable_in_dotenv_file DATABASE_CONNECTION_STRING
     fi
     echo_default "Storing .env.template md5 sum..."
     sed_inplace "s|^DOTENV_TEMPLATE_MD5=.*$|DOTENV_TEMPLATE_MD5=${REAL_DOTENV_TEMPLATE_MD5}|g" .env

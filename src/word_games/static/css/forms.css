@@ -1,0 +1,112 @@
+input,
+textarea,
+select {
+    width: 100%;
+    padding: 12px 16px;
+
+    background: transparent;
+    color: white;
+
+    /* half-transparent border */
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 12px;
+
+    outline: none;
+
+    transition:
+        border-color 0.3s ease,
+        box-shadow 0.3s ease;
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* hover glow */
+input:hover,
+textarea:hover,
+select:hover {
+    border-color: rgba(102, 204, 255, 0.8);
+    box-shadow: 0 0 12px rgba(102, 204, 255, 0.6);
+}
+
+/* focus glow (stronger) */
+input:focus,
+textarea:focus,
+select:focus {
+    border-color: rgba(0, 191, 255, 0.9);
+    box-shadow: 0 0 18px rgba(0, 191, 255, 0.8);
+}
+
+
+.checkbox {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: white;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* hide native checkbox */
+.checkbox input {
+    display: none;
+}
+
+/* custom box */
+.checkmark {
+    width: 18px;
+    height: 18px;
+
+    background: transparent;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 6px;
+
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+/* hover glow */
+.checkbox:hover .checkmark {
+    border-color: rgba(102, 204, 255, 0.8);
+    box-shadow: 0 0 10px rgba(102, 204, 255, 0.6);
+}
+
+/* checked state */
+.checkbox input:checked + .checkmark {
+    border-color: rgba(0, 191, 255, 0.9);
+    box-shadow: 0 0 14px rgba(0, 191, 255, 0.8);
+}
+
+/* check mark */
+.checkmark::after {
+    content: "";
+    position: absolute;
+    display: none;
+
+    left: 4px;
+    top: 1px;
+
+    width: 4px;
+    height: 8px;
+
+    border: solid rgba(0, 191, 255, 0.9);
+    border-width: 0 2px 2px 0;
+
+    transform: rotate(45deg);
+}
+
+/* show checkmark when checked */
+.checkbox input:checked + .checkmark::after {
+    display: block;
+}
+
+#password-rules div {
+    color: #dc3545;
+    margin: 5px 0;
+}
+
+#password-rules div.valid {
+    color: #198754;
+}
