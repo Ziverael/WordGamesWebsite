@@ -136,7 +136,7 @@ test_code () {
     _opts="${3}"
     echo_title "Starting tests with pytest..."
     start_dev_helper
-    _opts_="${_opts} --cov word_games"
+    _opts="${_opts} --cov src/word_games"
     _opts="${_opts} --cov-report html:coverage/htmlcov"
     _opts="${_opts} --cov-report xml:coverage/coverage.xml"
     _opts="${_opts} --cache-clear"
@@ -169,13 +169,13 @@ clean_pycached () {
     echo_default "Done"
 }
 
-open_coverage_report () {
-    echo_title "Opening coverage report..."
+open_code_coverage_report () {
+    echo_title "Opening code coverage report..."
     if [ -f ".local/coverage/htmlcov/index.html" ]
     then
         open_in_browser ".local/coverage/htmlcov/index.html"
     else
-        echo_error "Coverage report not found..."
+        echo_warning "Coverage report not found..."
     fi
 }
 
