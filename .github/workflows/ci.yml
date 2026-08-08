@@ -11,6 +11,20 @@ jobs:
     strategy:
       matrix:
         python: ["3.12"]
+    services:
+      postgres:
+        image: postgres:16.6
+        env:
+          POSTGRES_USER: CI
+          POSTGRES_PASSWORD: ${{ secrets.db_password }}
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 127.0.0.1:5432:5432
 
     steps:
       - uses: actions/checkout@v4
@@ -22,14 +36,16 @@ jobs:
       - name: Install uv
         run: curl -LsSf https://astral.sh/uv/install.sh | sh
 
-      - name: Install just
-        run: uv tool install rust-just
-
       - name: Setup dependencies
         run: uv sync --dev && touch DEV
 
-      - name: Run pre-commit
-        run: uv run pre-commit run --all-files
+      - name: Run lint
+        run: |
+          uv run ruff check . || ERROR=$?
+          uv run ruff format --check . || ERROR=$?
+          uv run mypy --incremental --show-error-codes --pretty . || ERROR=$?
+          exit ${ERROR}
+
 
   build:
     name: Build (Python ${{ matrix.python }})
@@ -53,7 +69,7 @@ jobs:
         run: curl -LsSf https://astral.sh/uv/install.sh | sh
 
       - name: Install dependencies
-        run: uv sync --dev
+        run: uv sync --dev --lock
 
       - name: Build package
         run: uv build
