@@ -54,7 +54,12 @@ jobs:
 
       - name: Run tests
         run: |
-          uv run pytest --cache-clear --pyargs ./tests
+          uv run pytest \
+            --cov src/word_games \
+            --cov-report html:coverage/htmlcov \
+            --cov-report xml:coverage/coverage.xml \
+            --cache-clear \
+            --pyargs ./tests
         env:
           APP_ENV: dev
           APP_SECRET_KEY: ${{ secrets.app_secret_key }}
