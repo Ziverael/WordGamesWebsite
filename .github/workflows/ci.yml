@@ -26,6 +26,9 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+        ports:
+          - 127.0.0.1:5432:5432
+
       mailpit:
         image: axllent/mailpit:v1.27
         ports:
@@ -51,6 +54,14 @@ jobs:
           uv run ruff format --check . || ERROR=$?
           uv run mypy --incremental --show-error-codes --pretty . || ERROR=$?
           exit ${ERROR}
+
+      - name: Test setup
+        run: |
+          uv run alembic upgrade head
+        env:
+          APP_ENV: dev
+          APP_SECRET_KEY: ${{ secrets.app_secret_key }}
+          DATABASE_CONNECTION_STRING: ${{ secrets.db_connection_string }}
 
       - name: Run tests
         run: |
