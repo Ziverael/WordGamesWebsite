@@ -4,6 +4,9 @@ on:
   pull_request:
     branches: [ main ]
 
+env:
+  UV_NO_SYNC: 1
+
 jobs:
   lint:
     name: Lint (Python ${{ matrix.python }})
@@ -23,8 +26,11 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+      mailpit:
+        image: axllent/mailpit:v1.27
         ports:
-          - 127.0.0.1:5432:5432
+          - 127.0.0.1:1025:1025
+          - 127.0.0.1:8025:8025
 
     steps:
       - uses: actions/checkout@v4
@@ -37,7 +43,7 @@ jobs:
         run: curl -LsSf https://astral.sh/uv/install.sh | sh
 
       - name: Setup dependencies
-        run: uv sync --dev && touch DEV
+        run: uv sync --dev --locked && touch DEV
 
       - name: Run lint
         run: |
@@ -45,6 +51,18 @@ jobs:
           uv run ruff format --check . || ERROR=$?
           uv run mypy --incremental --show-error-codes --pretty . || ERROR=$?
           exit ${ERROR}
+
+      - name: Run tests
+        run: |
+          uv run pytest --cache-clear --pyargs ./tests
+        env:
+          APP_ENV: dev
+          APP_SECRET_KEY: ${{ secrets.app_secret_key }}
+          DATABASE_CONNECTION_STRING: ${{ secrets.db_connection_string }}
+          SMTP_SERVER: localhost
+          SMTP_PORT: 1025
+          SMTP_WEB_UI: 8025
+
 
 
   build:
@@ -54,7 +72,8 @@ jobs:
     strategy:
       matrix:
         python: ["3.12"]
-
+    env:
+      UV_NO_DEV: 1
     steps:
       - uses: actions/checkout@v4
 
@@ -69,7 +88,7 @@ jobs:
         run: curl -LsSf https://astral.sh/uv/install.sh | sh
 
       - name: Install dependencies
-        run: uv sync --dev --lock
+        run: uv sync  --locked
 
       - name: Build package
         run: uv build
