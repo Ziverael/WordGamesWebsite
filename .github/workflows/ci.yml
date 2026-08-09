@@ -4,6 +4,15 @@ on:
   pull_request:
     branches: [ main ]
 
+env:
+  UV_NO_SYNC: 1
+
+permissions:
+  contents: read
+  checks: write
+  issues: write
+  pull-requests: write
+
 jobs:
   lint:
     name: Lint (Python ${{ matrix.python }})
@@ -11,6 +20,26 @@ jobs:
     strategy:
       matrix:
         python: ["3.12"]
+    services:
+      postgres:
+        image: postgres:16.6
+        env:
+          POSTGRES_USER: CI
+          POSTGRES_PASSWORD: ${{ secrets.db_password }}
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 127.0.0.1:5432:5432
+
+      mailpit:
+        image: axllent/mailpit:v1.27
+        ports:
+          - 127.0.0.1:1025:1025
+          - 127.0.0.1:8025:8025
 
     steps:
       - uses: actions/checkout@v4
@@ -21,45 +50,45 @@ jobs:
 
       - name: Install uv
         run: curl -LsSf https://astral.sh/uv/install.sh | sh
-
-      - name: Install just
-        run: uv tool install rust-just
 
       - name: Setup dependencies
-        run: uv sync --dev && touch DEV
+        run: uv sync --dev --locked && touch DEV
 
-      - name: Run pre-commit
-        run: uv run pre-commit run --all-files
+      - name: Run lint
+        run: |
+          uv run ruff check . || ERROR=$?
+          uv run ruff format --check . || ERROR=$?
+          uv run mypy --incremental --show-error-codes --pretty . || ERROR=$?
+          exit ${ERROR}
 
-  build:
-    name: Build (Python ${{ matrix.python }})
-    runs-on: ubuntu-latest
-    needs: lint
-    strategy:
-      matrix:
-        python: ["3.12"]
+      - name: Test setup
+        run: |
+          uv run alembic upgrade head
+        env:
+          APP_ENV: dev
+          APP_SECRET_KEY: ${{ secrets.app_secret_key }}
+          DATABASE_CONNECTION_STRING: ${{ secrets.db_connection_string }}
 
-    steps:
-      - uses: actions/checkout@v4
+      - name: Run tests
+        run: |
+          uv run pytest \
+            --cov src/word_games \
+            --junitxml=coverage/junit.xml \
+            --cov-report html:coverage/htmlcov \
+            --cov-report xml:coverage/coverage.xml \
+            --cache-clear \
+            --pyargs ./tests
+        env:
+          APP_ENV: dev
+          APP_SECRET_KEY: ${{ secrets.app_secret_key }}
+          DATABASE_CONNECTION_STRING: ${{ secrets.db_connection_string }}
+          SMTP_SERVER: localhost
+          SMTP_PORT: 1025
+          SMTP_WEB_UI: 8025
 
-      - uses: actions/setup-python@v5
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: (!cancelled())
         with:
-          python-version: ${{ matrix.python }}
-
-      - name: Prevent dirty lockfile
-        run: git diff --exit-code uv.lock
-
-      - name: Install uv
-        run: curl -LsSf https://astral.sh/uv/install.sh | sh
-
-      - name: Install dependencies
-        run: uv sync --dev
-
-      - name: Build package
-        run: uv build
-
-      - name: Upload dist artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist-py${{ matrix.python }}
-          path: dist/
+          files: |
+            coverage/junit.xml

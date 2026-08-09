@@ -160,7 +160,7 @@ exclude_lines = [# list of regexes
 
 [tool.coverage.run]
 branch = true
-source = ["."]
+source = ["./src/word_games"]
 
 
 [tool.alembic]

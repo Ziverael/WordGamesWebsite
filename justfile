@@ -108,7 +108,7 @@ clean_pycached:
 coverage_report:
     #!/usr/bin/env sh
     {{sh_init}}
-    open_coverage_report
+    open_code_coverage_report
 
 profile file:
     #!/usr/bin/env sh
@@ -121,12 +121,12 @@ set dotenv-load
 
 alias a     := all
 alias c     := check
-alias cr    := coverage_report
+alias ccr   := coverage_report
 alias f     := format
 alias fc    := format_and_check
 alias rb    := rebuild
 alias rf    := refresh
-alias ot     := only_test
+alias ot    := only_test
 alias t     := test
 alias ud    := update_dotenv
 

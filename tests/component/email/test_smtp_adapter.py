@@ -14,12 +14,13 @@ from word_games.email.smtp_adapter import SMTPEmailService
 class MailApi(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="SMTP_", extra="ignore")
 
+    server: str = Field(min_length=1)
     web_ui: int
     wait_time: float = Field(default=0.2)
 
     @property
     def messages_api(self) -> str:
-        return f"http://wordgames-smtp:{self.web_ui}/api/v1/messages"
+        return f"http://{self.server}:{self.web_ui}/api/v1/messages"
 
 
 MAILPIT_API = MailApi()
