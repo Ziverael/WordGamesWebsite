@@ -4,3 +4,26 @@
 span.example{
     display: block;
 }
+
+.container{
+    display: flex;
+}
+
+.align-center{
+    align-items: center;
+}
+
+
+.menu{
+    flex-grow: 0.3;
+    width: 100px;
+    background-color: blueviolets;
+}
+
+.vertical{
+    flex-direction: column;
+}
+
+.text-m{
+
+}

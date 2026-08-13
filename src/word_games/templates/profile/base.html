@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{%block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename = 'css/tags.css') }}" type="text/css"/>
+<link rel="stylesheet" href="{{ url_for('static', filename = 'css/classes.css') }}" type="text/css"/>
+<link rel="stylesheet" href="{{ url_for('static', filename = 'css/vertical-main.css') }}" type="text/css"/>
+
+{% endblock %}
+
+
+{% block main %}
+        <section class="glass-card menu">
+            <div class="container vertical">
+                <a href="{{ url_for('profile.user_profile') }}"><button>Me</button></a>
+                <a href="{{ url_for('profile.security') }}"><button>Security</button></a>
+            </div>
+            {% if current_user.role.name == "teacher" %}
+                <div class="container vertical">
+                    <a href="{{ url_for('profile.students') }}"><button>Students</button></a>
+                    <a href="{{ url_for('profile.assignments') }}"><button>Assignments</button></a>
+                    <a href="{{ url_for('profile.games') }}"><button>Games</button></a>
+                    <a href="{{ url_for('profile.game_editor') }}"><button>Game Editor</button></a>
+                </div>
+            {% else %}
+            {% endif %}
+
+        </section>
+        <section class="glass-card" id="main">
+            {% block content %}
+            {% endblock %}
+        </section>
+{% endblock %}

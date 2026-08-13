@@ -24,3 +24,44 @@ main li a{
 main li a:hover{
     text-shadow: #FC0 1px 0 10px;;
 }
+
+button{
+    position: relative;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 5%;
+    border: unset;
+    padding:10px;
+    cursor: pointer;
+
+}
+
+button:after{
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(23, 15, 15, 0.407);
+    clip-path: circle(0%);
+    transition: 0.5s ease;
+    z-index: -1;
+    animation: bounce2 2s ease infinite;
+
+}
+
+button:hover{
+    animation: 1s jump 0s ease;
+}
+
+button:hover:after{
+    clip-path: circle(100%);
+
+}
+
+
+@keyframes jump {
+	0%, 40%, 100% {transform: translateY(0);}
+	20% {transform: translateY(-15px);}
+	60% {transform: translateY(-5px);}
+}

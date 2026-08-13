@@ -47,9 +47,10 @@ def test_app_blueprints(app, db_session):
     from word_games.view.auth import auth as auth_bp
     from word_games.view.creator import creator as creator_bp
     from word_games.view.main import main as main_bp
+    from word_games.view.profile import profile as profile_bp
 
     # ruff: enable[PLC0415]
-    bps = [main_bp, auth_bp, creator_bp]
+    bps = [main_bp, auth_bp, creator_bp, profile_bp]
 
     # when
     from flask import current_app  # noqa: PLC0415

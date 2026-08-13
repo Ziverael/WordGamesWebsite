@@ -23,9 +23,8 @@
             <a href="{{ url_for('main.index') }}">WordGames</a>
         </div>
         {% if current_user.username %}
-        <!-- TODO: url_for(user.profile) -->
         <div>
-            <a href="{{ url_for('auth.login') }}">
+            <a href="{{ url_for('profile.user_profile') }}">
                 <button class="login-btn">
                     Profile
                 </button>
@@ -75,7 +74,7 @@
     {% endif %}
 {% endwith %}
 
-    <main class="main">
+    <main>
 		{% block main %}
         {% endblock %}
     </main>

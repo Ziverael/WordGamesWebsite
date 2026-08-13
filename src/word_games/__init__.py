@@ -46,4 +46,8 @@ def create_app():
     from word_games.view.creator import creator as creator_bp
 
     app.register_blueprint(creator_bp)
+
+    from word_games.view.profile import profile as profile_bp
+
+    app.register_blueprint(profile_bp)
     return app

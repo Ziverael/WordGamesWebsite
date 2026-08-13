@@ -1,0 +1,9 @@
+{% extends "profile/base.html" %}
+
+{% block content%}
+<h1>{{ current_user.name }}</h1>
+<p>My role: {{ current_user.role.name }}</p>
+
+<p>Email: {{current_user. email}}</p>
+
+{% endblock %}
