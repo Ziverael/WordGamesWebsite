@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% from "auth/macros.html" import render_errors %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename = 'css/forms.css') }}" type="text/css"/>
+{% endblock %}
+
+{% block main %}
+<h1>Game Editor</h1>
+
+<section class="glass-card">
+    <form method="POST" action="" novalidate>
+        {% if form.is_submitted() and form.errors %}
+            <div class="error-text">Form errors</div>
+        {% endif%}
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.type.label }}<br>
+            {{ form.type }}
+            {{ render_errors(form.type) }}
+        </p>
+        <p>
+            {{ form.layout.label }}<br>
+            {{ form.layout }}
+            {{ render_errors(form.layout) }}
+        </p>
+        <p>{{ form.submit() }}</p>
+    </form>
+</section>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div id="toast-container">
+            {% for category, message in messages %}
+                <div class="toast {{ category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+{% endblock %}

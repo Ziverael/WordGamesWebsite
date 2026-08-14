@@ -14,12 +14,12 @@
                 <a href="{{ url_for('profile.user_profile') }}"><button>Me</button></a>
                 <a href="{{ url_for('profile.security') }}"><button>Security</button></a>
             </div>
+                <a href="{{ url_for('profile.assignments') }}"><button>Assignments</button></a>
             {% if current_user.role.name == "teacher" %}
                 <div class="container vertical">
                     <a href="{{ url_for('profile.students') }}"><button>Students</button></a>
-                    <a href="{{ url_for('profile.assignments') }}"><button>Assignments</button></a>
                     <a href="{{ url_for('profile.games') }}"><button>Games</button></a>
-                    <a href="{{ url_for('profile.game_editor') }}"><button>Game Editor</button></a>
+                    <a href="{{ url_for('game_editor.main') }}"><button>Game Editor</button></a>
                 </div>
             {% else %}
             {% endif %}
