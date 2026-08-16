@@ -110,3 +110,27 @@ select:focus {
 #password-rules div.valid {
     color: #198754;
 }
+
+.radio-list>ul{
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    flex-direction: row;
+}
+
+.radio-list>ul .layout-card{
+    flex-grow: 1;
+    text-align: center;
+    text-transform: capitalize;
+    justify-content:  space-around;
+    margin: 10px;
+}
+
+.radio-list>ul .layout-graphic{
+    flex-grow: 1;
+}
+
+img{
+    width: 400px;
+}

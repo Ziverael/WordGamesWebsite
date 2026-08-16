@@ -24,6 +24,6 @@ span.example{
     flex-direction: column;
 }
 
-.text-m{
-
+.flex-row{
+    flex-direction: row;
 }

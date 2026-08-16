@@ -8,25 +8,23 @@
 
 {% block main %}
 <h1>Game Editor</h1>
+<section class="glass-card">
+    {{ form.name.label }}<br>
+    {{ form.name(size=64) }}
+    {{ render_errors(form.name) }}
+</section>
+<section id="editor" class="glass-card">
+<div class="container toolbar">
+    <button>Add</button>
+    <button>Mark as gap</button>
+
+</div>
+<div class="container map">
+
+</div>
+</section>
 
 <section class="glass-card">
-    <form method="POST" action="" novalidate>
-        {% if form.is_submitted() and form.errors %}
-            <div class="error-text">Form errors</div>
-        {% endif%}
-        {{ form.hidden_tag() }}
-        <p>
-            {{ form.type.label }}<br>
-            {{ form.type }}
-            {{ render_errors(form.type) }}
-        </p>
-        <p>
-            {{ form.layout.label }}<br>
-            <div class="radio-list container flex-row">
-                {{ form.layout }}
-            </div>
-            {{ render_errors(form.layout) }}
-        </p>
         <p>{{ form.submit() }}</p>
     </form>
 </section>
@@ -47,10 +45,6 @@
 
 
 {% block scripts %}
-    <script>
-        const layoutLabels = {{ layouts_mapping | tojson }}
-        const layoutImages = {{ layout_images | tojson }};
-    </script>
     <script src="{{ url_for('static', filename = 'js/dynamic-game-type-select.js') }}"></script>
     <script src="{{ url_for('static', filename = 'js/game-editors.js') }}"></script>
 {% endblock %}
