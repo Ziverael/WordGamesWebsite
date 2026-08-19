@@ -18,8 +18,16 @@
     background-color: yellow;
 }
 
+#editor button.edit.active{
+    background-color: rgb(224, 174, 8);
+}
+
 #editor button.delete{
     background-color: red;
+}
+
+#editor button.restore{
+    background-color: blue;
 }
 
 #editor button.new{
@@ -32,6 +40,11 @@
     padding: 5px;
 }
 
- #editor .input.brush-mode {
+#editor .input.brush-mode {
     cursor: crosshair;
-  }
+}
+
+#editor .marked{
+    text-decoration: underline;
+    color: rgb(212, 163, 28);
+}
