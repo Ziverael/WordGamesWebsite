@@ -1,0 +1,37 @@
+#editor .input{
+    width: auto;
+    border: 1px dashed white;
+    border-radius: 3px;
+    padding: 2px;
+    flex-grow: 1;
+}
+
+#editor button{
+    border-radius: 15%;
+    border-color: rgba(0, 0, 0, 0);
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+}
+
+#editor button.edit{
+    background-color: yellow;
+}
+
+#editor button.delete{
+    background-color: red;
+}
+
+#editor button.new{
+    background-color: green;
+}
+
+#editor button img{
+    width: inherit;
+    height: inherit;
+    padding: 5px;
+}
+
+ #editor .input.brush-mode {
+    cursor: crosshair;
+  }

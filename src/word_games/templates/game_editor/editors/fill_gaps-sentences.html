@@ -4,6 +4,7 @@
 {% block css %}
 <link rel="stylesheet" href="{{ url_for('static', filename = 'css/forms.css') }}" type="text/css"/>
 <link rel="stylesheet" href="{{ url_for('static', filename = 'css/classes.css') }}" type="text/css"/>
+<link rel="stylesheet" href="{{ url_for('static', filename = 'css/editor.css') }}" type="text/css"/>
 {% endblock %}
 
 {% block main %}
@@ -14,12 +15,14 @@
     {{ render_errors(form.name) }}
 </section>
 <section id="editor" class="glass-card">
-<div class="container toolbar">
-    <button>Add</button>
-    <button>Mark as gap</button>
+    <section>
+        Create new sentence clicking plus button. In drag and drop sentence, to change their order.
+    </section>
 
-</div>
-<div class="container map">
+<div id="editor" class="container map">
+    <button id="addNew" class="new">
+        <img src="{{ url_for('static', filename='image/svg/new-button.svg') }}" alt="">
+    </button>
 
 </div>
 </section>
@@ -41,10 +44,18 @@
     {% endif %}
 {% endwith %}
 
+<button id="edit-template" type="button"  class="drag-handle dummy">
+    <img
+        src="{{ url_for('static', filename='image/svg/edit-button.svg') }}"
+        alt=""/></button>
+<button id="remove-template" type="button"  class="drag-handle dummy">
+    <img
+        src="{{ url_for('static', filename='image/svg/remove-button.svg') }}"
+        alt=""/></button>
 {% endblock %}
 
 
 {% block scripts %}
-    <script src="{{ url_for('static', filename = 'js/dynamic-game-type-select.js') }}"></script>
-    <script src="{{ url_for('static', filename = 'js/game-editors.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script src="{{ url_for('static', filename = 'js/game-editors/fill-gaps.js') }}"></script>
 {% endblock %}

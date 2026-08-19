@@ -146,3 +146,21 @@ main {
 .footer-section a:hover {
     color: white;
 }
+
+.row{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+
+}
+
+
+.dummy{
+    position: fixed;
+    top: 0;
+    left: 0;
+    visibility: hidden;
+
+
+}
