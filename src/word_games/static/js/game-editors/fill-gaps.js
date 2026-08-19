@@ -61,7 +61,7 @@ function addSentence(){
     });
     const restoreButton = restoreButtonTemplate.cloneNode(true);
     restoreButton.classList.remove("dummy");
-    restoreButton.classList.add("restore")
+    restoreButton.classList.add("restore");
     restoreButton.addEventListener("click", () => {
         sentenceField.querySelectorAll("span").forEach(span => {
         span.replaceWith(...span.childNodes);
