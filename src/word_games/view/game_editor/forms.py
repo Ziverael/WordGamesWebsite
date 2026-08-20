@@ -1,5 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import (
+    HiddenField,
     RadioField,
     SelectField,
     StringField,
@@ -41,4 +42,16 @@ class GameSetupForm(FlaskForm):
 
 class GameForm(FlaskForm):
     name = StringField("Name", validators=[DataRequired()])
+    content = HiddenField("Content")
+    game_type = HiddenField("Game_type")
+    game_subtype = HiddenField("Game_subtype")
     submit = SubmitField("Save")
+
+    def validate_content(self): ...
+
+    """this is extremely one validation spot. Because JS code which produces
+    game is on client side, one may still modify this code in the fly
+    in order to generate malicious code and try to infest the server.
+
+    In that case we have to treat this field as extremely unsafe and
+    analyze if input exactly what we expects."""

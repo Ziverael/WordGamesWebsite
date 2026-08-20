@@ -23,11 +23,11 @@
     <button id="addNew" class="new">
         <img src="{{ url_for('static', filename='image/svg/new-button.svg') }}" alt="">
     </button>
-
 </div>
 </section>
 
 <section class="glass-card">
+    {{ form.content(id="game-data") }}
         <p>{{ form.submit() }}</p>
     </form>
 </section>

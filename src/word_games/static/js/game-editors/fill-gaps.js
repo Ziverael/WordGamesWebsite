@@ -11,6 +11,7 @@ const addButton = document.getElementById("addNew")
 const editButtonTemplate = document.getElementById("edit-template")
 const removeButtonTemplate = document.getElementById("remove-template")
 const restoreButtonTemplate = document.getElementById("restore-template")
+const gameData = document.getElementById("game-data");
 
 let brushMode = false;
 
@@ -93,3 +94,19 @@ function enableAddButton(){
 }
 
 addButton.addEventListener("click", addSentence);
+
+document.querySelector("form").addEventListener("submit", ()=> {
+    gameData.value = editorContainer.innerHTML;
+});
+
+
+function getGameContent(){
+    let sentences = {};
+    editorContainer.querySelector(".input").forEach((el) => {
+        sentences[el.textContent] = [];
+        el.querySelectorAll(".marked").forEach((marked)=>{
+            sentences[el.textContent].push(marked.textContent)
+        });
+    });
+    return sentences;
+}
