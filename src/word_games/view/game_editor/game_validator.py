@@ -3,54 +3,64 @@ restrictions per game.
 """
 
 import json
+import re
 from typing import Any, Final
 
 from wtforms.validators import ValidationError
+
+from word_games.error import SecurityViolationError
 
 
 CHAR_LIMITS: Final[int] = 10_000
 
 
 def fill_gaps_sentences(content: Any):
-    if not isinstance(content, dict):
+    if content == "":
+        msg = "Empty content"
+        raise ValidationError(msg)
+    _security_checks(content)
+    json_content = load_json(content)
+    if not isinstance(json_content, dict):
         msg = "Invalid content."
         raise ValidationError(msg)
+    for sentence, marks in json_content.items():
+        if not isinstance(sentence, str):
+            msg = "Sentence should be a string."
+            raise ValidationError(msg)
+        if not isinstance(marks, list):
+            msg = "Invalid item."
+            raise ValidationError(msg)
+        if len(marks) == 0:
+            msg = ""
+        if not (isinstance(el, str) for el in marks):
+            msg = "Invalid marked object."
 
 
-def _basic_check(content: Any):
-    content = _load_json(content)
+html_pattern = re.compile(r"<\s*/?\s*[a-zA-Z][^>]*>")
 
-    if not isinstance(content, list):
-        msg = "Invalid content."
-        raise ValidationError(msg)
 
+def _security_checks(content: str) -> None:
+    """Checks for:
+    1. Valid type
+    2. Payload size
+    3. code injection
+    """
+    if not isinstance(content, str):
+        msg = "Content must be a string"
+        raise SecurityViolationError(msg)
     if len(content) > CHAR_LIMITS:
-        msg = "Too many content elements."
-        raise ValidationError(msg)
-
-    for item in content:
-        if not isinstance(item, dict):
-            msg = "Invalid content element."
-            raise ValidationError(msg)
-
-        if not isinstance(item.get("text"), str):
-            msg = "Invalid text."
-            raise ValidationError(msg)
-
-        if not isinstance(item.get("covered"), bool):
-            msg = "Invalid covered value."
-            raise ValidationError(msg)
-
-        if len(item["text"]) > CHAR_LIMITS:
-            msg = "Text is too long."
-            raise ValidationError(msg)
+        msg = f"Content exceeds the maximum allowed length of {CHAR_LIMITS} characters."
+        raise SecurityViolationError(msg)
+    if html_pattern.search(content):
+        msg = "HTML markup is not allowed. This incident will be reported."
+        raise SecurityViolationError(msg)
 
 
-def _load_json(content: Any):
+def load_json(content: Any):
     try:
         content = json.loads(content)
     except (TypeError, json.JSONDecodeError) as e:
-        msg = "Content parsing error."
+        msg = "Content is not parseable."
         raise ValidationError(msg) from e
     else:
         return content

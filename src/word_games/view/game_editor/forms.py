@@ -9,6 +9,8 @@ from wtforms import (
 )
 from wtforms.validators import DataRequired
 
+import word_games.view.game_editor.game_validator as game_validators
+from word_games.error import SecurityViolationError
 from word_games.game.model import GAME_LAYOUTS, GameType
 
 
@@ -43,15 +45,30 @@ class GameSetupForm(FlaskForm):
 class GameForm(FlaskForm):
     name = StringField("Name", validators=[DataRequired()])
     content = HiddenField("Content")
-    game_type = HiddenField("Game_type")
-    game_subtype = HiddenField("Game_subtype")
     submit = SubmitField("Save")
 
-    def validate_content(self): ...
+    def __init__(self, editor_type: str, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.editor_type = editor_type
+        self._security_violation = False
 
-    """this is extremely one validation spot. Because JS code which produces
-    game is on client side, one may still modify this code in the fly
-    in order to generate malicious code and try to infest the server.
+    def remove_security_violation_flag(self) -> None:
+        self._security_violation = False
 
-    In that case we have to treat this field as extremely unsafe and
-    analyze if input exactly what we expects."""
+    def validate_content(self, field):
+        """this is extremely one validation spot. Because JS code which produces
+        game is on client side, one may still modify this code in the fly
+        in order to generate malicious code and try to infest the server.
+
+        In that case we have to treat this field as extremely unsafe and
+        analyze if input exactly what we expects."""
+        try:
+            match self.editor_type:
+                case "fill_gaps-sentences":
+                    game_validators.fill_gaps_sentences(field.data)
+                case _:
+                    msg = f"Invalid pair: {self.editor_type}"
+                    raise ValidationError(msg)
+        except SecurityViolationError as e:
+            self._security_violation = True
+            raise ValidationError(str(e)) from e

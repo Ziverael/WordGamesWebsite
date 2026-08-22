@@ -7,6 +7,10 @@ from word_games.game.model import GAME_LAYOUTS
 from word_games.model import Role
 from word_games.view.game_editor import game_editor
 from word_games.view.game_editor.forms import GameForm, GameSetupForm
+from word_games.view.game_editor.game_validator import (
+    ValidationError,
+    load_json,
+)
 
 
 @game_editor.before_request
@@ -46,10 +50,13 @@ def editor(editor: str):
     if not _is_valid_editor_page(editor_page):
         flash(f"{editor} is not a valid editor.", "error")
         return redirect(url_for("game_editor.setup"))
-    form = GameForm()
+    editor_state: dict | None = None
+    form = GameForm(editor_type=editor)
     if form.validate_on_submit():
         ...
-    return render_template(editor_page, form=form)
+    editor_state = _get_editor_state(form.content.data)
+
+    return render_template(editor_page, form=form, editor_state=editor_state)
 
 
 def _is_valid_editor_page(page: str) -> bool:
@@ -60,3 +67,14 @@ def _is_valid_editor_page(page: str) -> bool:
         for v in values
     ]
     return page in valid_pages
+
+
+def _get_editor_state(raw_editor_content: str | None):
+    editor_state: dict | None = None
+    try:
+        if not getattr(raw_editor_content, "security_violation", False):
+            editor_state = load_json(raw_editor_content)
+    except ValidationError:
+        ...
+    else:
+        return editor_state

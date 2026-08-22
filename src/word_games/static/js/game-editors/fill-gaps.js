@@ -11,9 +11,27 @@ const addButton = document.getElementById("addNew")
 const editButtonTemplate = document.getElementById("edit-template")
 const removeButtonTemplate = document.getElementById("remove-template")
 const restoreButtonTemplate = document.getElementById("restore-template")
-const gameData = document.getElementById("game-data");
+const gameData = document.getElementById("content");
 
 let brushMode = false;
+
+function initEditor(){
+    if (editorInitState === null){
+        console.log("Fresh editor state.")
+        return;
+    }
+    if (!isDict(editorInitState)){
+        console.log("Editor init state is corrupted.")
+        return;
+    }
+    for (const [sentence, value] of Object.entries(editorInitState).reverse()) {
+        addSentence();
+        const sentencesInputs = editorContainer.querySelectorAll(".input");
+        const last_sentence = sentencesInputs[sentencesInputs.length - 1];
+        last_sentence.textContent = sentence;
+
+    }
+}
 
 function addSentence(){
     if (sentencesCounter >= sentencesLimit) {
@@ -30,12 +48,14 @@ function addSentence(){
     const editButton = editButtonTemplate.cloneNode(true);
     editButton.classList.remove("dummy");
     editButton.classList.add("edit");
-    editButton.addEventListener("click", () => {
+    editButton.addEventListener("click", (event) => {
+        event.preventDefault();
         brushMode = !brushMode;
         sentenceField.classList.toggle("brush-mode", brushMode);
         editButton.classList.toggle("active", brushMode);
     });
     sentenceField.addEventListener("pointerup", (event) => {
+        event.preventDefault();
         if (!brushMode) return;
         if (event.pointerType !== "mouse" && event.pointerType !== "pen") return;
         const selection = window.getSelection();
@@ -57,13 +77,15 @@ function addSentence(){
     const deleteButton = removeButtonTemplate.cloneNode(true);
     deleteButton.classList.remove("dummy");
     deleteButton.classList.add("delete")
-    deleteButton.addEventListener('click', () => {
+    deleteButton.addEventListener('click', (event) => {
+        event.preventDefault();
         deleteButton.parentElement.remove();
     });
     const restoreButton = restoreButtonTemplate.cloneNode(true);
     restoreButton.classList.remove("dummy");
     restoreButton.classList.add("restore");
-    restoreButton.addEventListener("click", () => {
+    restoreButton.addEventListener("click", (event) => {
+        event.preventDefault();
         sentenceField.querySelectorAll("span").forEach(span => {
         span.replaceWith(...span.childNodes);
         });
@@ -93,20 +115,32 @@ function enableAddButton(){
     addButton.removeAttribute("disabled")
 }
 
-addButton.addEventListener("click", addSentence);
+function isDict(value){
+    return (value !== undefined && value !== null && value.constructor == Object)
+}
+
+addButton.addEventListener("click", (event) => {
+    event.preventDefault();
+    addSentence();
+});
 
 document.querySelector("form").addEventListener("submit", ()=> {
-    gameData.value = editorContainer.innerHTML;
+    gameData.value = getGameContent();
 });
 
 
 function getGameContent(){
     let sentences = {};
-    editorContainer.querySelector(".input").forEach((el) => {
+    if (editorContainer.querySelector(".input") === null){
+        return "";
+    }
+    editorContainer.querySelectorAll(".input").forEach((el) => {
         sentences[el.textContent] = [];
         el.querySelectorAll(".marked").forEach((marked)=>{
             sentences[el.textContent].push(marked.textContent)
         });
     });
-    return sentences;
+    return JSON.stringify(sentences);
 }
+
+initEditor();

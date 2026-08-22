@@ -9,26 +9,28 @@
 
 {% block main %}
 <h1>Game Editor</h1>
-<section class="glass-card">
-    {{ form.name.label }}<br>
-    {{ form.name(size=64) }}
-    {{ render_errors(form.name) }}
-</section>
-<section id="editor" class="glass-card">
-    <section>
-        Create new sentence clicking plus button. In drag and drop sentence, to change their order.
+<form method="POST" action="" novalidate class="no-impact">
+    {{ form.hidden_tag() }}
+    <section class="glass-card">
+        {{ form.name.label }}<br>
+        {{ form.name(size=64) }}
+        {{ render_errors(form.name) }}
+    </section>
+    <section class="glass-card">
+        <section>
+            Create new sentence clicking plus button. In drag and drop sentence, to change their order.
+        </section>
+
+    <div id="editor" class="container map vertical">
+        <button id="addNew" class="new">
+            <img src="{{ url_for('static', filename='image/svg/new-button.svg') }}" alt="">
+        </button>
+    </div>
     </section>
 
-<div id="editor" class="container map">
-    <button id="addNew" class="new">
-        <img src="{{ url_for('static', filename='image/svg/new-button.svg') }}" alt="">
-    </button>
-</div>
-</section>
-
-<section class="glass-card">
-    {{ form.content(id="game-data") }}
-        <p>{{ form.submit() }}</p>
+    <section class="glass-card">
+        {{ render_errors(form.content) }}
+            <p>{{ form.submit() }}</p>
     </form>
 </section>
 
@@ -60,6 +62,9 @@
 
 
 {% block scripts %}
+<script>
+    const editorInitState = {{ editor_state | tojson }}
+</script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script src="{{ url_for('static', filename = 'js/game-editors/fill-gaps.js') }}"></script>
 {% endblock %}
