@@ -1,7 +1,9 @@
+import uuid
 from datetime import datetime
 
 from flask_login import UserMixin
 from sqlalchemy import Index, String
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -15,6 +17,12 @@ from word_games.utils import TZ_UTC
 
 class User(BaseTable, UserMixin):
     id: Mapped[int] = mapped_column(primary_key=True)
+    public_id: Mapped[uuid.UUID] = mapped_column(
+        UUID,
+        default=uuid.uuid4,
+        unique=True,
+        nullable=False,
+    )
     email: Mapped[str] = mapped_column(String(64), nullable=False)
     username: Mapped[str] = mapped_column(String(64), nullable=False)
     role: Mapped[Role] = mapped_column(nullable=False)

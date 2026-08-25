@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% from "auth/macros.html" import render_errors %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename = 'css/forms.css') }}" type="text/css"/>
+<link rel="stylesheet" href="{{ url_for('static', filename = 'css/classes.css') }}" type="text/css"/>
+<link rel="stylesheet" href="{{ url_for('static', filename = 'css/editor.css') }}" type="text/css"/>
+{% endblock %}
+
+{% block main %}
+<h1>Game Editor</h1>
+<form method="POST" action="" novalidate class="no-impact">
+    {{ form.hidden_tag() }}
+    <section class="glass-card">
+        {{ form.name.label }}<br>
+        {{ form.name(size=64) }}
+        {{ render_errors(form.name) }}
+    </section>
+    <section class="glass-card">
+        <section>
+            Create new sentence clicking plus button. In drag and drop sentence, to change their order.
+        </section>
+
+    <div id="editor" class="container map vertical">
+        <button id="addNew" class="new">
+            <img src="{{ url_for('static', filename='image/svg/new-button.svg') }}" alt="">
+        </button>
+    </div>
+    </section>
+
+    <section class="glass-card">
+        {{ render_errors(form.content) }}
+            <p>{{ form.submit() }}</p>
+    </form>
+</section>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div id="toast-container">
+            {% for category, message in messages %}
+                <div class="toast {{ category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<button id="edit-template" type="button"  class="drag-handle dummy">
+    <img
+        src="{{ url_for('static', filename='image/svg/edit-button.svg') }}"
+        alt=""/></button>
+<button id="remove-template" type="button"  class="drag-handle dummy">
+    <img
+        src="{{ url_for('static', filename='image/svg/remove-button.svg') }}"
+        alt=""/></button>
+<button id="restore-template" type="button"  class="drag-handle dummy">
+    <img
+        src="{{ url_for('static', filename='image/svg/restore-button.svg') }}"
+        alt=""/></button>
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+    const editorInitState = {{ editor_state | tojson }}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script src="{{ url_for('static', filename = 'js/game-editors/fill-gaps.js') }}"></script>
+{% endblock %}

@@ -11,6 +11,7 @@
 
     <!-- External CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename = 'css/styles.css') }}" type="text/css"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename = 'css/flash.css') }}" type="text/css"/>
     <link rel="stylesheet" href="{{ url_for('static', filename = 'css/text.css') }}" type="text/css"/>
 	<link rel="stylesheet" href="{{ url_for('static', filename = 'css/vars.css') }}" type="text/css"/>
     {% block css %}
@@ -23,9 +24,8 @@
             <a href="{{ url_for('main.index') }}">WordGames</a>
         </div>
         {% if current_user.username %}
-        <!-- TODO: url_for(user.profile) -->
         <div>
-            <a href="{{ url_for('auth.login') }}">
+            <a href="{{ url_for('profile.user_profile') }}">
                 <button class="login-btn">
                     Profile
                 </button>
@@ -75,7 +75,7 @@
     {% endif %}
 {% endwith %}
 
-    <main class="main">
+    <main>
 		{% block main %}
         {% endblock %}
     </main>

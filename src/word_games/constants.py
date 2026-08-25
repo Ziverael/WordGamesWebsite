@@ -1,3 +1,4 @@
+from enum import IntEnum
 from typing import Final
 
 from wtforms.validators import Length
@@ -10,3 +11,9 @@ PASSWORD_LENGTH = Length(12, 64)
 
 TOKEN_EXP_TIME_SEC: Final[int] = 3600
 ENCODING: Final[str] = "utf-8"
+
+
+class HTTPStatusCode(IntEnum):
+    OK = 200
+
+    FORBIDDEN = 403

@@ -1,7 +1,10 @@
 #toast-container {
     position: fixed;
-    top: 20px;
-    right: 20px;
+    top: 80px;
+    right: 50%;
+    min-width: 80%;
+    transform: translate(50%);
+
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -9,7 +12,6 @@
 }
 
 .toast {
-    min-width: 220px;
     padding: 12px 16px;
     border-radius: 12px;
 
@@ -28,26 +30,29 @@
 .toast.success {
     border-color: rgba(0, 255, 150, 0.6);
     box-shadow: 0 0 15px rgba(0, 255, 150, 0.3);
+    background-color: rgba(0, 255, 150, 0.3);
 }
 
 .toast.error {
     border-color: rgba(255, 80, 80, 0.6);
     box-shadow: 0 0 15px rgba(255, 80, 80, 0.3);
+    background-color: rgba(255, 80, 80, 0.3);
 }
 
 .toast.info {
     border-color: rgba(80, 160, 255, 0.6);
     box-shadow: 0 0 15px rgba(80, 160, 255, 0.3);
+    background-color: rgba(80, 160, 255, 0.3);
 }
 
 /* animations */
 @keyframes slideIn {
     from {
-        transform: translateX(120%);
+        transform: translateY(-120%);
         opacity: 0;
     }
     to {
-        transform: translateX(0);
+        transform: translateY(0);
         opacity: 1;
     }
 }
@@ -55,6 +60,6 @@
 @keyframes fadeOut {
     to {
         opacity: 0;
-        transform: translateX(120%);
+        transform: translateY(-120%);
     }
 }
