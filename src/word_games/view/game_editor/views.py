@@ -1,10 +1,14 @@
+from datetime import datetime
 from itertools import chain
 
 from flask import flash, redirect, render_template, url_for
 from flask_login import current_user
 
+from word_games.db import get_session
+from word_games.game.db import Game
 from word_games.game.model import GAME_LAYOUTS
 from word_games.model import Role
+from word_games.utils import TZ_UTC
 from word_games.view.game_editor import game_editor
 from word_games.view.game_editor.forms import GameForm, GameSetupForm
 from word_games.view.game_editor.game_validator import (
@@ -53,7 +57,16 @@ def editor(editor: str):
     editor_state: dict | None = None
     form = GameForm(editor_type=editor)
     if form.validate_on_submit():
-        ...
+        game = Game(
+            title=form.name.data,
+            created_at=datetime.now(tz=TZ_UTC),
+            creator=current_user.id,
+            content=form.content.data,
+        )
+        with get_session() as session:
+            session.add(game)
+        flash("Game saved successfully", "success")
+        return redirect(url_for("profile.games"))
     editor_state = _get_editor_state(form.content.data)
 
     return render_template(editor_page, form=form, editor_state=editor_state)

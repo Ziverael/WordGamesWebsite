@@ -29,11 +29,8 @@ function initEditor(){
         const sentencesInputs = editorContainer.querySelectorAll(".input");
         const last_sentence = sentencesInputs[sentencesInputs.length - 1];
         last_sentence.textContent = sentence;
-        console.log(values);
-        for (const i=0;i<values.length;i++){
-            const range = values[i];
-            console.log(range["start"]);
-            markRange(last_sentence, range["start"], range["end"]);
+        for (const range of values){
+            wrapRange(last_sentence, range["start"], range["end"] + 1)
         }
     }
 }
@@ -180,15 +177,14 @@ function getMarkedPositions (container) {
     return indices;
 }
 
-function markRange(element, start, end) {
-  const text = element.textContent;
-  const before = text.slice(0, start);
-  const selected = text.slice(start, end);
-  const after = text.slice(end);
 
-  element.innerHTML =
-    `${before}<span>${selected}</span>${after}`;
+function wrapRange(element, start, end, class_="marked") {
+    const text = element.textContent;
+    const before = text.slice(0, start);
+    const selected = text.slice(start, end);
+    const after = text.slice(end);
+    element.innerHTML =
+        `${before}<span class=${class_}>${selected}</span>${after}`;
 }
-
 
 initEditor();
