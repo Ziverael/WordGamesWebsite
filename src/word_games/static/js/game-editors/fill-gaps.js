@@ -24,12 +24,17 @@ function initEditor(){
         console.log("Editor init state is corrupted.")
         return;
     }
-    for (const [sentence, value] of Object.entries(editorInitState).reverse()) {
+    for (const [sentence, values] of Object.entries(editorInitState).reverse()) {
         addSentence();
         const sentencesInputs = editorContainer.querySelectorAll(".input");
         const last_sentence = sentencesInputs[sentencesInputs.length - 1];
         last_sentence.textContent = sentence;
-
+        console.log(values);
+        for (const i=0;i<values.length;i++){
+            const range = values[i];
+            console.log(range["start"]);
+            markRange(last_sentence, range["start"], range["end"]);
+        }
     }
 }
 
@@ -135,12 +140,55 @@ function getGameContent(){
         return "";
     }
     editorContainer.querySelectorAll(".input").forEach((el) => {
-        sentences[el.textContent] = [];
-        el.querySelectorAll(".marked").forEach((marked)=>{
-            sentences[el.textContent].push(marked.textContent)
-        });
+        sentences[el.textContent] = getMarkedPositions(el);
     });
     return JSON.stringify(sentences);
 }
+
+function getMarkedPositions (container) {
+    const indices = [];
+    let offset = 0;
+    const walker = document.createTreeWalker(
+        container,
+        NodeFilter.SHOW_TEXT,
+    );
+    while (walker.nextNode()) {
+        const node = walker.currentNode;
+        const parent = node.parentElement;
+        if (parent?.matches("span.marked")) {
+            const next_start = offset;
+            const next_end = offset + node.textContent.length - 1;
+            if (next_start > next_end){
+                console.log("Nested spans encountered. Skipping.");
+            }
+            const prev_span = indices.at(-1) ?? {"start": -2, "end": -2};
+            if (next_start <= prev_span["end"] + 1){
+                indices[indices.length - 1] = {
+                    start: prev_span["start"],
+                    end: Math.max(prev_span["end"], next_end),
+                }
+            }
+            else{
+                indices.push({
+                start: offset,
+                end: offset + node.textContent.length - 1
+            });
+            }
+        }
+        offset += node.textContent.length;
+    }
+    return indices;
+}
+
+function markRange(element, start, end) {
+  const text = element.textContent;
+  const before = text.slice(0, start);
+  const selected = text.slice(start, end);
+  const after = text.slice(end);
+
+  element.innerHTML =
+    `${before}<span>${selected}</span>${after}`;
+}
+
 
 initEditor();
