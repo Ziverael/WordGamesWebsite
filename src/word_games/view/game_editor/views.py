@@ -3,6 +3,7 @@ from itertools import chain
 
 from flask import flash, redirect, render_template, url_for
 from flask_login import current_user
+from sqlalchemy.exc import IntegrityError
 
 from word_games.db import get_session
 from word_games.game.db import Game
@@ -59,17 +60,35 @@ def editor(editor: str):
     if form.validate_on_submit():
         game = Game(
             title=form.name.data,
+            type=form.game_type,
+            subtype=form.game_subtype,
             created_at=datetime.now(tz=TZ_UTC),
             creator=current_user.id,
             content=form.content.data,
         )
-        with get_session() as session:
-            session.add(game)
-        flash("Game saved successfully", "success")
+        _insert_game(game)
         return redirect(url_for("profile.games"))
     editor_state = _get_editor_state(form.content.data)
 
     return render_template(editor_page, form=form, editor_state=editor_state)
+
+
+@game_editor.route(
+    "/game_editor/edit/<string:game_id>", methods=["GET", "POST"]
+)
+def edit(game_id: str): ...
+
+
+def _insert_game(game: Game) -> None:
+    try:
+        with get_session() as session:
+            session.add(game)
+        flash("Game saved successfully", "success")
+    except IntegrityError:
+        flash(
+            "Cannot write this game, because it violates integrity restrictions.",
+            "error",
+        )
 
 
 def _is_valid_editor_page(page: str) -> bool:

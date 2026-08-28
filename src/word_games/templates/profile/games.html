@@ -1,7 +1,44 @@
 {% extends "profile/base.html" %}
 
+
 {% block content%}
 <h1>Games</h1>
 <p>There are games you have created. They can be edit, removed, or assigned to students. </p>
+
+{% set options = ["edit", "assign", "run", "delete"] %}
+{% set options_meta = {
+    "edit": {"route": "game_editor.edit"},
+    "assign": {"route": "profile.assign_game"},
+    "run": {"route": "game.play"},
+    "delete": {"route": "profile.delete_game"},
+}
+%}
+<div class="glass-table-wrapper">
+    <table class="glass-table">
+        <thead class="table-dark">
+            <tr>
+                {% for header in ["Title", "Created at"] + options %}
+                    <th scope="col">{{ header }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for row in table %}
+                <tr>
+                    {% for key, value in row.items() %}
+                        {% if key != "public_id" %}
+                            <td>{{ value }}</td>
+                        {% endif %}
+                    {% endfor %}
+                    {% for button in  options%}
+                        <td><a href="{{ url_for(options_meta[button]['route'], game_id=row['public_id']) }}"><button id="game-button-{{ button }}">{{ button }}</button></a></td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
 
 {% endblock %}

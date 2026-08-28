@@ -1,3 +1,4 @@
+from flask_login import current_user
 from flask_wtf import FlaskForm
 from wtforms import (
     HiddenField,
@@ -11,6 +12,7 @@ from wtforms.validators import DataRequired
 
 import word_games.view.game_editor.game_validator as game_validators
 from word_games.error import SecurityViolationError
+from word_games.game.db import select_user_games_titles
 from word_games.game.model import GAME_LAYOUTS, GameType
 
 
@@ -50,6 +52,7 @@ class GameForm(FlaskForm):
     def __init__(self, editor_type: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.editor_type = editor_type
+        self.game_type, self.game_subtype = editor_type.split("-")
         self._security_violation = False
 
     def remove_security_violation_flag(self) -> None:
@@ -72,3 +75,9 @@ class GameForm(FlaskForm):
         except SecurityViolationError as e:
             self._security_violation = True
             raise ValidationError(str(e)) from e
+
+    def validate_name(self, field):
+        user_game_titles = select_user_games_titles(current_user.id)
+        if field.data in user_game_titles:
+            msg = "You have a game with this title."
+            raise ValidationError(msg)
