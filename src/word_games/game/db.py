@@ -45,6 +45,7 @@ def select_public_business_columns(
             select(
                 Game.title,
                 Game.created_at,
+                Game.modified_at,
                 Game.public_id,
             ).where(Game.creator == user_id)
         )

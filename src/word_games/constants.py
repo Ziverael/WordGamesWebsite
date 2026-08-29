@@ -15,5 +15,7 @@ ENCODING: Final[str] = "utf-8"
 
 class HTTPStatusCode(IntEnum):
     OK = 200
+    NO_CONTENT = 204
 
+    BAD_REQUEST = 400
     FORBIDDEN = 403

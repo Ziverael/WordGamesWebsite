@@ -11,7 +11,7 @@ from word_games.game.db import (
     select_title_where_public_id,
     select_user_games_public_ids,
 )
-from word_games.utils import normalize_text, rename_dict_key
+from word_games.utils import TZ_UTC, normalize_text, rename_dict_key
 
 
 @profile.route("/profile/me", methods=["GET", "POST"])
@@ -83,3 +83,11 @@ def game_editor():
         "profile/game_editor.html",
         user=current_user,
     ), HTTPStatusCode.OK
+
+
+@profile.app_template_filter("format_datetime")
+def format_datetime(dt):
+    if dt is None:
+        return ""
+    output = dt.replace(tzinfo=TZ_UTC)
+    return output.isoformat()
