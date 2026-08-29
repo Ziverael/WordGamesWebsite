@@ -54,6 +54,10 @@ class GameForm(FlaskForm):
         self.editor_type = editor_type
         self.game_type, self.game_subtype = editor_type.split("-")
         self._security_violation = False
+        self.edit_mode = False
+
+    def toogle_edit_mode(self) -> None:
+        self.edit_mode = True
 
     def remove_security_violation_flag(self) -> None:
         self._security_violation = False
@@ -78,6 +82,6 @@ class GameForm(FlaskForm):
 
     def validate_name(self, field):
         user_game_titles = select_user_games_titles(current_user.id)
-        if field.data in user_game_titles:
+        if field.data in user_game_titles and not self.edit_mode:
             msg = "You have a game with this title."
             raise ValidationError(msg)

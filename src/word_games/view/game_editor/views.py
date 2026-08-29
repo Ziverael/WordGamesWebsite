@@ -1,13 +1,24 @@
+import uuid
 from datetime import datetime
 from itertools import chain
 
-from flask import flash, redirect, render_template, url_for
+from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user
 from sqlalchemy.exc import IntegrityError
 
 from word_games.db import get_session
-from word_games.game.db import Game
-from word_games.game.model import GAME_LAYOUTS
+from word_games.game.db import (
+    Game,
+    select_title_where_public_id,
+    select_type_subtype_and_content_where_public_id,
+    update_game_content_where_creator_and_title,
+    update_game_modfified_at_where_creator_and_title,
+)
+from word_games.game.model import (
+    GAME_LAYOUTS,
+    GameNaturalIdentifier,
+    GameUpdate,
+)
 from word_games.model import Role
 from word_games.utils import TZ_UTC
 from word_games.view.game_editor import game_editor
@@ -57,26 +68,53 @@ def editor(editor: str):
         return redirect(url_for("game_editor.setup"))
     editor_state: dict | None = None
     form = GameForm(editor_type=editor)
+    if request.args.get("edit_mode", False):
+        form.toogle_edit_mode()
     if form.validate_on_submit():
-        game = Game(
-            title=form.name.data,
-            type=form.game_type,
-            subtype=form.game_subtype,
-            created_at=datetime.now(tz=TZ_UTC),
-            creator=current_user.id,
-            content=form.content.data,
-        )
-        _insert_game(game)
+        if form.edit_mode:
+            update = GameUpdate(
+                content=form.content.data, modified_at=datetime.now(tz=TZ_UTC)
+            )
+            natural_id = GameNaturalIdentifier(
+                creator=current_user.id, title=form.name.data
+            )
+            _update_game(update, natural_id)
+        else:
+            game = Game(
+                title=form.name.data,
+                type=form.game_type,
+                subtype=form.game_subtype,
+                created_at=datetime.now(tz=TZ_UTC),
+                creator=current_user.id,
+                content=form.content.data,
+            )
+            _insert_game(game)
         return redirect(url_for("profile.games"))
-    editor_state = _get_editor_state(form.content.data)
-
+    game_content = request.args.get("game_conetnt", form.content.data)
+    game_title = request.args.get("game_title", form.name.data)
+    form.name.data = game_title
+    editor_state = _get_editor_state(game_content)
     return render_template(editor_page, form=form, editor_state=editor_state)
 
 
-@game_editor.route(
-    "/game_editor/edit/<string:game_id>", methods=["GET", "POST"]
-)
-def edit(game_id: str): ...
+@game_editor.route("/game_editor/edit/<uuid:game_id>", methods=["GET", "POST"])
+def edit(game_id: uuid.UUID):
+    game_spec = select_type_subtype_and_content_where_public_id(game_id)
+    if game_spec is None:
+        flash("Cannot find game data.", "error")
+        return redirect(url_for("profile.games"))
+    type_, subtype, content = game_spec
+    editor = f"{type_}-{subtype}"
+    title = select_title_where_public_id(game_id)
+    return redirect(
+        url_for(
+            "game_editor.editor",
+            editor=editor,
+            game_title=title,
+            game_conetnt=content,
+            edit_mode=True,
+        )
+    )
 
 
 def _insert_game(game: Game) -> None:
@@ -89,6 +127,15 @@ def _insert_game(game: Game) -> None:
             "Cannot write this game, because it violates integrity restrictions.",
             "error",
         )
+
+
+def _update_game(update: GameUpdate, natural_id: GameNaturalIdentifier) -> None:
+    update_game_content_where_creator_and_title(
+        update.content, natural_id.creator, natural_id.title
+    )
+    update_game_modfified_at_where_creator_and_title(
+        update.modified_at, natural_id.creator, natural_id.title
+    )
 
 
 def _is_valid_editor_page(page: str) -> bool:

@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import JSON, UUID, Index, delete, select
+from sqlalchemy import JSON, UUID, Index, and_, delete, select, update
 from sqlalchemy.orm import Mapped, mapped_column
 
 from word_games.database import BaseTable
@@ -28,6 +28,7 @@ class Game(BaseTable):
     type: Mapped[str]
     subtype: Mapped[str]
     created_at: Mapped[datetime]
+    modified_at: Mapped[datetime] = mapped_column(nullable=True)
     creator: Mapped[int]
     content: Mapped[dict] = mapped_column(JSON)
 
@@ -87,3 +88,37 @@ def select_title_where_public_id(game_id: uuid.UUID) -> str:
 def delete_game_where_public_id(game_id: uuid.UUID) -> None:
     with get_session() as session:
         session.execute(delete(Game).where(Game.public_id == game_id))
+
+
+def update_game_content_where_creator_and_title(
+    content: dict, creator: int, title: str
+) -> None:
+    with get_session() as session:
+        session.execute(
+            update(Game)
+            .where(and_(Game.creator == creator, Game.title == title))
+            .values(content=content)
+        )
+
+
+def update_game_modfified_at_where_creator_and_title(
+    time: datetime, creator: int, title: str
+):
+    with get_session() as session:
+        session.execute(
+            update(Game)
+            .where(and_(Game.creator == creator, Game.title == title))
+            .values(modified_at=time)
+        )
+
+
+def select_type_subtype_and_content_where_public_id(
+    game_id: uuid.UUID,
+) -> tuple[str, str, dict] | None:
+    with get_session() as session:
+        results = session.execute(
+            select(Game.type, Game.subtype, Game.content).where(
+                Game.public_id == game_id
+            )
+        )
+        return results.one_or_none()
