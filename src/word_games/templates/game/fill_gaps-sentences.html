@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% from "auth/macros.html" import render_errors %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename = 'css/forms.css') }}" type="text/css"/>
+<link rel="stylesheet" href="{{ url_for('static', filename = 'css/classes.css') }}" type="text/css"/>
+<link rel="stylesheet" href="{{ url_for('static', filename = 'css/editor.css') }}" type="text/css"/>
+{% endblock %}
+
+{% block main %}
+<h1>{{title}}</h1>
+<p>
+    Fill gaps in sentences.
+</p>
+<form method="POST" action="" novalidate class="no-impact">
+    {{ form.hidden_tag() }}
+
+    <div id="game" class="container map vertical">
+    </div>
+    </section>
+
+    <section class="glass-card">
+            <p>{{ form.submit() }}</p>
+    </form>
+</section>
+
+
+{% endblock %}
+
+
+{% block scripts %}
+{% endblock %}
