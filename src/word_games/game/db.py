@@ -2,7 +2,8 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import JSON, UUID, Index, and_, delete, select, update
+from sqlalchemy import UUID, Index, and_, delete, select, update
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from word_games.database import BaseTable
@@ -30,7 +31,7 @@ class Game(BaseTable):
     created_at: Mapped[datetime]
     modified_at: Mapped[datetime] = mapped_column(nullable=True)
     creator: Mapped[int]
-    content: Mapped[dict] = mapped_column(JSON)
+    content: Mapped[dict] = mapped_column(JSONB)
 
     __table_args__ = (
         Index("idx_unique_user_title", "creator", "title", unique=True),
@@ -113,13 +114,21 @@ def update_game_modfified_at_where_creator_and_title(
         )
 
 
-def select_type_subtype_and_content_where_public_id(
+def select_precise_category_where_public_id(
     game_id: uuid.UUID,
-) -> tuple[str, str, dict] | None:
+) -> tuple[str, str] | None:
     with get_session() as session:
         results = session.execute(
-            select(Game.type, Game.subtype, Game.content).where(
-                Game.public_id == game_id
-            )
+            select(Game.type, Game.subtype).where(Game.public_id == game_id)
+        )
+        return results.one_or_none()
+
+
+def select_content_where_public_id(
+    game_id: uuid.UUID,
+) -> dict | None:
+    with get_session() as session:
+        results = session.execute(
+            select(Game.content).where(Game.public_id == game_id)
         )
         return results.one_or_none()

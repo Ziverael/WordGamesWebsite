@@ -9,8 +9,9 @@ from sqlalchemy.exc import IntegrityError
 from word_games.db import get_session
 from word_games.game.db import (
     Game,
+    select_content_where_public_id,
+    select_precise_category_where_public_id,
     select_title_where_public_id,
-    select_type_subtype_and_content_where_public_id,
     update_game_content_where_creator_and_title,
     update_game_modfified_at_where_creator_and_title,
 )
@@ -71,9 +72,10 @@ def editor(editor: str):
     if request.args.get("edit_mode", False):
         form.toogle_edit_mode()
     if form.validate_on_submit():
+        parsed_content = load_json(form.content.data)
         if form.edit_mode:
             update = GameUpdate(
-                content=form.content.data, modified_at=datetime.now(tz=TZ_UTC)
+                content=parsed_content, modified_at=datetime.now(tz=TZ_UTC)
             )
             natural_id = GameNaturalIdentifier(
                 creator=current_user.id, title=form.name.data
@@ -86,35 +88,41 @@ def editor(editor: str):
                 subtype=form.game_subtype,
                 created_at=datetime.now(tz=TZ_UTC),
                 creator=current_user.id,
-                content=form.content.data,
+                content=parsed_content,
             )
             _insert_game(game)
         return redirect(url_for("profile.games"))
-    game_content = request.args.get("game_conetnt", form.content.data)
+    request_game_content = request.args.get("game_conetnt")
+    game_content = form.content.data
     game_title = request.args.get("game_title", form.name.data)
     form.name.data = game_title
+    flash(request.args.get("edit_mode"))
     editor_state = _get_editor_state(game_content)
     return render_template(editor_page, form=form, editor_state=editor_state)
 
 
 @game_editor.route("/game_editor/edit/<uuid:game_id>", methods=["GET", "POST"])
 def edit(game_id: uuid.UUID):
-    game_spec = select_type_subtype_and_content_where_public_id(game_id)
-    if game_spec is None:
+    precise_category = select_precise_category_where_public_id(game_id)
+    if precise_category is None:
         flash("Cannot find game data.", "error")
         return redirect(url_for("profile.games"))
-    type_, subtype, content = game_spec
+    type_, subtype = precise_category
     editor = f"{type_}-{subtype}"
-    title = select_title_where_public_id(game_id)
     return redirect(
-        url_for(
-            "game_editor.editor",
-            editor=editor,
-            game_title=title,
-            game_conetnt=content,
-            edit_mode=True,
-        )
+        url_for("game_editor.editor", editor=editor, game_id=game_id)
     )
+
+
+def _load_game_definition(game_id: uuid.UUID):
+    try:
+        title = select_title_where_public_id(game_id)
+        if title is None:
+            flash("Cannot find game data.", "error")
+            return redirect(url_for("main.index"))
+        content = select_content_where_public_id(game_id) #noqa: F841
+    except RuntimeError:
+        ...
 
 
 def _insert_game(game: Game) -> None:

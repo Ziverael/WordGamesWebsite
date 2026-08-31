@@ -16,8 +16,13 @@
     {{ form.hidden_tag() }}
 
     <div id="game" class="container map vertical">
+        {% for entry in content | tojson %}
+            <!-- <section>{{loop.index}}</section> -->
+            <!-- <section>{{entry}}</section> -->
+        {% endfor %}
+        {{content | tojson}}
+        {{content | tojson}}
     </div>
-    </section>
 
     <section class="glass-card">
             <p>{{ form.submit() }}</p>
@@ -29,4 +34,7 @@
 
 
 {% block scripts %}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script src="{{ url_for('static', filename = 'js/game/fill-gaps.js') }}"></script>
 {% endblock %}
