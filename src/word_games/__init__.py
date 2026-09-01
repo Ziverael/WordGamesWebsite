@@ -1,9 +1,19 @@
+import logging
+import sys
+
 from flask import Flask, render_template
 
 from word_games.db import get_session, register_db_cleanup
 from word_games.email.app_init import get_email_service
 from word_games.extensions import extensions_manager
 from word_games.user.db import User
+
+
+handler = logging.StreamHandler(sys.stdout)
+handler.setLevel(logging.INFO)
+handler.setFormatter(
+    logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s")
+)
 
 
 @extensions_manager.login_manager.user_loader
@@ -28,6 +38,10 @@ def create_app():
     app.config.from_mapping(APP_SETTINGS.model_dump(by_alias=True))
     app.config.update(**SMTP_SETTINGS.model_dump(by_alias=True))
     app.register_error_handler(404, page_not_found)
+
+    app.logger.handlers.clear()
+    app.logger.addHandler(handler)
+    app.logger.setLevel(logging.INFO)
 
     extensions_manager.csrf.init_app(app)
     extensions_manager.login_manager.init_app(app)

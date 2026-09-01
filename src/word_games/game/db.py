@@ -92,24 +92,35 @@ def delete_game_where_public_id(game_id: uuid.UUID) -> None:
         session.execute(delete(Game).where(Game.public_id == game_id))
 
 
-def update_game_content_where_creator_and_title(
-    content: dict, creator: int, title: str
+def update_game_content_where_creator_and_public_id(
+    content: dict, creator: int, public_id: uuid.UUID
 ) -> None:
     with get_session() as session:
         session.execute(
             update(Game)
-            .where(and_(Game.creator == creator, Game.title == title))
+            .where(and_(Game.creator == creator, Game.public_id == public_id))
             .values(content=content)
         )
 
 
-def update_game_modfified_at_where_creator_and_title(
-    time: datetime, creator: int, title: str
+def update_game_title_where_creator_and_public_id(
+    title: str, creator: int, public_id: uuid.UUID
+) -> None:
+    with get_session() as session:
+        session.execute(
+            update(Game)
+            .where(and_(Game.creator == creator, Game.public_id == public_id))
+            .values(title=title)
+        )
+
+
+def update_game_modfified_at_where_creator_and_public_id(
+    time: datetime, creator: int, public_id: uuid.UUID
 ):
     with get_session() as session:
         session.execute(
             update(Game)
-            .where(and_(Game.creator == creator, Game.title == title))
+            .where(and_(Game.creator == creator, Game.public_id == public_id))
             .values(modified_at=time)
         )
 
@@ -131,4 +142,4 @@ def select_content_where_public_id(
         results = session.execute(
             select(Game.content).where(Game.public_id == game_id)
         )
-        return results.one_or_none()
+        return results.scalar_one_or_none()

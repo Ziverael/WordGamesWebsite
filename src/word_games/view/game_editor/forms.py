@@ -55,9 +55,16 @@ class GameForm(FlaskForm):
         self.game_type, self.game_subtype = editor_type.split("-")
         self._security_violation = False
         self.edit_mode = False
+        self._original_name: str | None = None
 
     def toogle_edit_mode(self) -> None:
         self.edit_mode = True
+
+    def set_original_name(self, value: str) -> None:
+        if not self.edit_mode:
+            msg = "Cannot set original name for not existing game."
+            raise ValueError(msg)
+        self._original_name = value
 
     def remove_security_violation_flag(self) -> None:
         self._security_violation = False
@@ -81,7 +88,8 @@ class GameForm(FlaskForm):
             raise ValidationError(str(e)) from e
 
     def validate_name(self, field):
+        is_name_edited = self.edit_mode and self._original_name != field.data
         user_game_titles = select_user_games_titles(current_user.id)
-        if field.data in user_game_titles and not self.edit_mode:
+        if field.data in user_game_titles and is_name_edited:
             msg = "You have a game with this title."
             raise ValidationError(msg)

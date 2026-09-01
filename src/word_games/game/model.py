@@ -7,6 +7,7 @@ There are few letters given as starters. The solver has to decipher the rest of 
 Words can be separated by empty squares.
 """
 
+import uuid
 from datetime import datetime
 from enum import StrEnum, auto
 from typing import Any, Final
@@ -14,12 +15,23 @@ from typing import Any, Final
 from pydantic import BaseModel, Field
 
 
+class GameRepresentation(BaseModel):
+    title: str = Field(min_length=1)
+    content: Any
+
+
 class GameNaturalIdentifier(BaseModel):
     creator: int
     title: str = Field(min_length=1)
 
 
+class GameUserScopeIdentifier(BaseModel):
+    creator: int
+    public_id: uuid.UUID
+
+
 class GameUpdate(BaseModel):
+    title: str | None
     modified_at: datetime
     content: Any
 
