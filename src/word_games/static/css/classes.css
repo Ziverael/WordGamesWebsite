@@ -27,3 +27,7 @@ span.example{
 .flex-row{
     flex-direction: row;
 }
+
+.align-text{
+    text-align: center;
+}

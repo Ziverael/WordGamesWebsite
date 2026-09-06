@@ -4,28 +4,40 @@
 {% block css %}
 <link rel="stylesheet" href="{{ url_for('static', filename = 'css/forms.css') }}" type="text/css"/>
 <link rel="stylesheet" href="{{ url_for('static', filename = 'css/classes.css') }}" type="text/css"/>
-<link rel="stylesheet" href="{{ url_for('static', filename = 'css/editor.css') }}" type="text/css"/>
+<link rel="stylesheet" href="{{ url_for('static', filename = 'css/game.css') }}" type="text/css"/>
 {% endblock %}
+
+{% set is_solved = results is not none %}
+{% if is_solved %}
+    {% set score = results["score"] %}
+    {% set answer_correct_pairs = results["matches"] %}
+{% else %}
+    {% set score = none %}
+    {% set answer_correct_pairs = none %}
+{% endif %}
 
 {% block main %}
 <h1>{{title}}</h1>
 <p>
     Fill gaps in sentences.
 </p>
-<form method="POST" action="" novalidate class="no-impact">
-    {{ form.hidden_tag() }}
+<section class="glass-card">
+    <form method="POST" action="" novalidate class="no-impact">
+        {{ form.hidden_tag() }}
 
-    <div id="game" class="container map vertical">
-        {% for entry in content | tojson %}
-            <!-- <section>{{loop.index}}</section> -->
-            <!-- <section>{{entry}}</section> -->
-        {% endfor %}
-        {{content | tojson}}
-        {{content | tojson}}
-    </div>
+        <div id="game" class="container map vertical">
+            {% for sentence in content %}
+                <section class="sentence">{{loop.index}}. {{sentence}}</section>
+            {% endfor %}
+        </div>
+</section>
 
-    <section class="glass-card">
+<section class="glass-card">
+        {% if not is_solved %}
             <p>{{ form.submit() }}</p>
+        {% else %}
+            <p class="align-text">Score:{{ score[0] }} / {{score[1]}} ({{score[2]}}%)</p>
+        {% endif %}
     </form>
 </section>
 
@@ -34,6 +46,9 @@
 
 
 {% block scripts %}
+<script>
+    const isSolved={{ is_solved | tojson }};
+    const answerCorrectPairs = {{ answer_correct_pairs | tojson }};
 </script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script src="{{ url_for('static', filename = 'js/game/fill-gaps.js') }}"></script>

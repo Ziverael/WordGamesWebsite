@@ -18,4 +18,9 @@ def to_user_timezone(dt: datetime, timezone: str):
     return dt.astimezone(ZoneInfo(timezone))
 
 
+def section_sort_key(value: str):
+    """Return soorting key for classic section pattern <section>.<subsection>"""
+    return tuple(map(int, value.split(".")))
+
+
 # TODO: implement url_has_allowed_host_and_scheme: https://github.com/django/django/blob/4.0/django/utils/http.py#L239  # noqa: FIX002

@@ -1,0 +1,21 @@
+input.inline{
+    width: auto;
+    display: inline;
+    margin: 0 2pt;
+    padding: 2pt;
+
+}
+
+.sentence .correct{
+    color: rgb(37, 205, 37);
+    font-weight: bold;
+}
+
+.sentence .wrong{
+    color: rgb(238, 37, 37);
+    text-decoration: line-through;
+}
+.sentence .expected{
+    color: rgb(18, 39, 147);
+    font-style: italic;
+}
