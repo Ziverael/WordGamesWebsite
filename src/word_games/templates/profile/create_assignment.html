@@ -1,0 +1,31 @@
+{% extends "profile/base.html" %}
+{% from "auth/macros.html" import render_errors %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename = 'css/forms.css') }}" type="text/css"/>
+{% endblock %}
+
+
+{% block content%}
+<section class="glass-card hero">
+    <h1>Create assigment</h1>
+    <p>
+        <form action="" method="post" novalidate>
+            {{ form.hidden_tag() }}
+            <p>
+                {{ form.student.label }}<br>
+                {{ form.student() }}
+                {{ render_errors(form.student) }}
+
+            </p>
+            <p>
+                {{ form.game.label }}<br>
+                {{ form.game() }}
+                {{ render_errors(form.game) }}
+
+            </p>
+            <p>{{ form.submit() }}</p>
+        </form>
+    </p>
+</section>
+{% endblock %}

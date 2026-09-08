@@ -21,7 +21,7 @@ from word_games.game.db import (
     select_precise_category_where_public_id,
     select_title_where_public_id,
     update_game_content_where_creator_and_public_id,
-    update_game_modfified_at_where_creator_and_public_id,
+    update_game_modified_at_where_creator_and_public_id,
     update_game_title_where_creator_and_public_id,
 )
 from word_games.game.model import (
@@ -166,7 +166,7 @@ def _update_game(
         update_game_content_where_creator_and_public_id(
             update.content, identifier.creator, identifier.public_id
         )
-        update_game_modfified_at_where_creator_and_public_id(
+        update_game_modified_at_where_creator_and_public_id(
             update.modified_at, identifier.creator, identifier.public_id
         )
         flash("Game updated successfully.", "success")

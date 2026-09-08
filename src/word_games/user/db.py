@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 
 from flask_login import UserMixin
-from sqlalchemy import Index, String
+from sqlalchemy import Index, String, select
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -124,3 +124,22 @@ class User(BaseTable, UserMixin):
 
     def __repr__(self):
         return f"<User {self.username}>"
+
+
+class NetworkHub(BaseTable):
+    """Represent community relation graph nodes. Nodes are not directed.
+    In that case to avoid risk of
+    """
+
+    user_one_id: Mapped[uuid.UUID] = mapped_column(UUID, nullable=False)
+    user_one_role: Mapped[Role] = mapped_column(nullable=False)
+    user_two_id: Mapped[uuid.UUID] = mapped_column(UUID, nullable=False)
+    user_two_role: Mapped[Role] = mapped_column(nullable=False)
+
+
+def select_students_of_user_where_public_id(public_id: uuid.UUID):
+    with get_session() as session:
+        results = session.execute(
+            select(Game.title).where(Game.public_id == game_id)
+        )
+        return results.scalar_one()

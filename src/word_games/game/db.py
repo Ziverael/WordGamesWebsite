@@ -114,7 +114,7 @@ def update_game_title_where_creator_and_public_id(
         )
 
 
-def update_game_modfified_at_where_creator_and_public_id(
+def update_game_modified_at_where_creator_and_public_id(
     time: datetime, creator: int, public_id: uuid.UUID
 ):
     with get_session() as session:
