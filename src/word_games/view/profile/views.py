@@ -12,7 +12,7 @@ from word_games.game.db import (
     select_user_games_public_ids,
     select_user_games_titles,
 )
-from word_games.game.db import select_user_games_titles
+from word_games.user.db import select_neighbours_of_user_where_public_id
 from word_games.utils import TZ_UTC, normalize_text, rename_dict_key
 
 
@@ -78,22 +78,17 @@ def delete_game(game_id: uuid.UUID):
 @profile.route("/profile/games/assign/<uuid:game_id>", methods=["GET", "POST"])
 def assign_game(game_id: uuid.UUID): ...
 
-@profile.route("/profile/games/assign/", methods=["GET", "POST"])
-def create_assignment():
-    available_games = select_user_games_titles(user_id=current_user.id)
-    return render_template(
-            "profile/create_assignment.html",
-            stuednts=available_student,
-            games=available_games,
-        ), HTTPStatusCode.OK
-
 
 @profile.route("/profile/games/assign/", methods=["GET", "POST"])
 def create_assignment():
-    available_games = select_user_games_titles(user_id=current_user.id)
+    user_id = current_user.id
+    available_games = select_user_games_titles(user_id=user_id)
+    available_students = select_neighbours_of_user_where_public_id(
+        public_id=user_id
+    )
     return render_template(
         "profile/create_assignment.html",
-        stuednts=available_student,
+        stuednts=available_students,
         games=available_games,
     ), HTTPStatusCode.OK
 

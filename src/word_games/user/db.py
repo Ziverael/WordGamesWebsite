@@ -2,7 +2,14 @@ import uuid
 from datetime import datetime
 
 from flask_login import UserMixin
-from sqlalchemy import Index, String, select
+from sqlalchemy import (
+    CheckConstraint,
+    Index,
+    PrimaryKeyConstraint,
+    String,
+    case,
+    select,
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -126,9 +133,11 @@ class User(BaseTable, UserMixin):
         return f"<User {self.username}>"
 
 
-class NetworkHub(BaseTable):
+class NetworkEdge(BaseTable):
     """Represent community relation graph nodes. Nodes are not directed.
-    In that case to avoid risk of
+
+    The contract is user one and two in rows are ordered in ascending order
+    by id field.
     """
 
     user_one_id: Mapped[uuid.UUID] = mapped_column(UUID, nullable=False)
@@ -136,10 +145,30 @@ class NetworkHub(BaseTable):
     user_two_id: Mapped[uuid.UUID] = mapped_column(UUID, nullable=False)
     user_two_role: Mapped[Role] = mapped_column(nullable=False)
 
+    __table_args__ = (
+        CheckConstraint("user_one_id < user_two_id", name="ck_ordered_id"),
+        PrimaryKeyConstraint(
+            "user_one_id", "user_two_id", name="pk_network_edge"
+        ),
+        Index("ix_edge_id_one", "user_one_id"),
+        Index("ix_edge_id_two", "user_two_id"),
+    )
 
-def select_students_of_user_where_public_id(public_id: uuid.UUID):
+
+def select_neighbours_of_user_where_public_id(public_id: uuid.UUID):
     with get_session() as session:
         results = session.execute(
-            select(Game.title).where(Game.public_id == game_id)
+            select(
+                case(
+                    (
+                        NetworkEdge.user_one_id == public_id,
+                        NetworkEdge.user_two_id,
+                    ),
+                    else_=NetworkEdge.user_one_id,
+                )
+            ).where(
+                (NetworkEdge.user_one_id == public_id)
+                | (NetworkEdge.user_two_id == public_id)
+            )
         )
-        return results.scalar_one()
+        return results.scalars().all()
