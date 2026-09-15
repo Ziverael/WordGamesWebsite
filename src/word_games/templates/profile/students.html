@@ -3,5 +3,6 @@
 {% block content%}
 <h1>Students</h1>
 <p>There is a list of your students. You can invite new students and give them assignments.</p>
-
+<a href="{{ url_for('profile.student_invitation') }}"><button>Add student</button></a>
+<a href=""><button>Remove student</button></a>
 {% endblock %}

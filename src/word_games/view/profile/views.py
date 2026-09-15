@@ -1,4 +1,5 @@
 import uuid
+from functools import wraps
 
 from . import profile
 from flask import flash, redirect, render_template, url_for
@@ -14,6 +15,20 @@ from word_games.game.db import (
 )
 from word_games.user.db import select_neighbours_of_user_where_public_id
 from word_games.utils import TZ_UTC, normalize_text, rename_dict_key
+from word_games.view.hooks import admit_teacher
+from word_games.view.profile.forms import StudentInvitationForm
+
+
+def requires_teacher_role(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if redirect_target := admit_teacher(
+            msg="This subpage is not avaiable for your role."
+        ):
+            return redirect_target
+        return f(*args, **kwargs)
+
+    return wrapper
 
 
 @profile.route("/profile/me", methods=["GET", "POST"])
@@ -33,10 +48,25 @@ def security():
 
 
 @profile.route("/profile/students", methods=["GET", "POST"])
+@requires_teacher_role
 def students():
     return render_template(
         "profile/students.html",
         user=current_user,
+    ), HTTPStatusCode.OK
+
+
+@profile.route("/profile/student_invitation", methods=["GET", "POST"])
+@requires_teacher_role
+def student_invitation():
+    form = StudentInvitationForm()
+    if form.validate_on_submit():
+        flash("Invitation submitted.", "success")
+        # TODO: send an invitation
+        return redirect(url_for("main.index"))
+    return render_template(
+        "profile/invite_student.html",
+        form=form,
     ), HTTPStatusCode.OK
 
 

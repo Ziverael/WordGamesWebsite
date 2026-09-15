@@ -8,6 +8,7 @@ from sqlalchemy import (
     PrimaryKeyConstraint,
     String,
     case,
+    exists,
     select,
 )
 from sqlalchemy.dialects.postgresql import UUID
@@ -172,3 +173,11 @@ def select_neighbours_of_user_where_public_id(public_id: uuid.UUID):
             )
         )
         return results.scalars().all()
+
+
+def select_user_exists_with_public_id(public_id: uuid.UUID) -> bool:
+    with get_session() as session:
+        results = session.execute(
+            select(exists().where(User.public_id == public_id))
+        )
+    return results.scalar_one()

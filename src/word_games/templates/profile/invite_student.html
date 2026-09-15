@@ -1,0 +1,24 @@
+{% extends "profile/base.html" %}
+{% from "auth/macros.html" import render_errors %}
+
+{% block css %}
+{{super()}}
+<link rel="stylesheet" href="{{ url_for('static', filename = 'css/forms.css') }}" type="text/css"/>
+{% endblock %}
+
+
+{% block content%}
+    <h1>Invite student</h1>
+    <p>
+        <form action="" method="post" novalidate>
+            {{ form.hidden_tag() }}
+            <p>
+                {{ form.student_id.label }}<br>
+                {{ form.student_id() }}
+                {{ render_errors(form.student_id) }}
+
+            </p>
+            <p>{{ form.submit() }}</p>
+        </form>
+    </p>
+{% endblock %}

@@ -30,7 +30,6 @@ from word_games.game.model import (
     GameUpdate,
     GameUserScopeIdentifier,
 )
-from word_games.model import Role
 from word_games.utils import TZ_UTC
 from word_games.view.game_editor import game_editor
 from word_games.view.game_editor.forms import GameForm, GameSetupForm
@@ -38,14 +37,12 @@ from word_games.view.game_editor.game_validator import (
     ValidationError,
     load_json,
 )
+from word_games.view.hooks import admit_teacher
 
 
 @game_editor.before_request
 def before_request():
-    if current_user.role != Role.teacher:
-        flash("Game editor is not avaiable for your role.", "error")
-        return redirect(url_for("main.index"))
-    return None
+    return admit_teacher(msg="Game editor is not avaiable for your role")
 
 
 @game_editor.route("/game_editor/main", methods=["GET", "POST"])
