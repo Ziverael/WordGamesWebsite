@@ -1,6 +1,9 @@
 class WordGamesError(Exception): ...
 
 
+class PendingInvitationError(WordGamesError): ...
+
+
 class ValidationError(WordGamesError): ...
 
 

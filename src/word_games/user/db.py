@@ -181,3 +181,11 @@ def select_user_exists_with_public_id(public_id: uuid.UUID) -> bool:
             select(exists().where(User.public_id == public_id))
         )
     return results.scalar_one()
+
+
+def select_user_role(public_id: uuid.UUID) -> Role | None:
+    with get_session() as session:
+        results = session.execute(
+            select(User.role).where(User.public_id == public_id)
+        )
+    return results.scalar_one_or_none()

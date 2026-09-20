@@ -6,6 +6,7 @@ from flask import flash, redirect, render_template, url_for
 from flask_login import current_user
 
 from word_games.constants import HTTPStatusCode
+from word_games.error import WordGamesError
 from word_games.game.db import (
     delete_game_where_public_id,
     select_public_business_columns,
@@ -13,6 +14,7 @@ from word_games.game.db import (
     select_user_games_public_ids,
     select_user_games_titles,
 )
+from word_games.invitation.controller import send_invitation
 from word_games.user.db import select_neighbours_of_user_where_public_id
 from word_games.utils import TZ_UTC, normalize_text, rename_dict_key
 from word_games.view.hooks import admit_teacher
@@ -61,9 +63,16 @@ def students():
 def student_invitation():
     form = StudentInvitationForm()
     if form.validate_on_submit():
-        flash("Invitation submitted.", "success")
-        # TODO: send an invitation
-        return redirect(url_for("main.index"))
+        try:
+            send_invitation(current_user.public_id, form.student_id.data)
+            flash("Invitation submitted.", "success")
+        except WordGamesError:
+            flash(
+                "Invitation already submitted and waiting for receiver confirmation.",
+                "error",
+            )
+        finally:
+            return redirect(url_for("main.index"))  # noqa: B012
     return render_template(
         "profile/invite_student.html",
         form=form,

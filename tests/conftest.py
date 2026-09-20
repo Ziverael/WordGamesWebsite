@@ -9,6 +9,7 @@ from polyfactory.pytest_plugin import register_fixture
 from word_games import create_app
 from word_games.config.app import APP_SETTINGS
 from word_games.game.db import Game
+from word_games.invitation.db import Invitation
 from word_games.task.db import Task
 from word_games.user.db import NetworkEdge, User
 
@@ -82,3 +83,7 @@ class UserFactory(SQLAlchemyFactory[User]): ...
 
 @register_fixture(name="network_edge_factory")
 class NetworkEdgeFactory(SQLAlchemyFactory[NetworkEdge]): ...
+
+
+@register_fixture(name="invitation_factory")
+class InvitationFactory(SQLAlchemyFactory[Invitation]): ...
