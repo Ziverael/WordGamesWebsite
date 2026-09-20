@@ -1,0 +1,77 @@
+{% extends "profile/base.html" %}
+
+{% block content%}
+<h1>Teachers</h1>
+<p>There are your teachers and invitations to become a student of a new teacher.</p>
+
+<h2>My teachers</h2>
+<div class="glass-table-wrapper">
+    <table class="glass-table">
+        <thead class="table-dark">
+            <tr>
+                {% for header in ["Teacher", "Student since"]%}
+                    <th scope="col">{{ header }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for row in table %}
+                <tr>
+                    {% for key, value in row.items() %}
+                        {% if key != "public_id" %}
+                            {% if key in ["created_at", "modified_at"] %}
+                                <td><time class="local-time" datetime="{{ value | format_datetime }}">{{ value | format_datetime }}</time></td>
+                            {% else %}
+                                <td>{{ value }}</td>
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                    {% for button in  options%}
+                        <td><a href="{{ url_for(options_meta[button]['route'], game_id=row['public_id']) }}"><button id="game-button-{{ button }}">{{ button }}</button></a></td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<h2>My invitations</h2>
+{% set options = ["accept", "reject"] %}
+{% set options_meta = {
+    "accept": {"route": "profile.accept_teacher_invitation"},
+    "reject": {"route": "profile.reject_teacher_invitation"},
+}
+%}
+<div class="glass-table-wrapper">
+    <table class="glass-table">
+        <thead class="table-dark">
+            <tr>
+                {% for header in ["Teacher", "Received at"] + options %}
+                    <th scope="col">{{ header }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for row in invitations %}
+                <tr>
+                    {% for key, value in row.items() %}
+                        {% if key != "invitation_id" %}
+                            {% if key in ["created_at", "modified_at"] %}
+                                <td><time class="local-time" datetime="{{ value | format_datetime }}">{{ value | format_datetime }}</time></td>
+                            {% else %}
+                                <td>{{ value }}</td>
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                    {% for button in  options%}
+                        <td><a href="{{ url_for(options_meta[button]['route'], invitation_id=row['invitation_id']) }}"><button id="game-button-{{ button }}">{{ button }}</button></a></td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

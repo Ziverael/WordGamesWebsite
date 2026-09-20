@@ -23,4 +23,15 @@ def section_sort_key(value: str):
     return tuple(map(int, value.split(".")))
 
 
+def raise_if_nonpositive_int(value: int):
+    if value <= 0:
+        msg = "value must be positive"
+        raise ValueError(msg)
+
+def raise_if_negative_int(value: int):
+    if value < 0:
+        msg = "value must be nonnegative"
+        raise ValueError(msg)
+
+
 # TODO: implement url_has_allowed_host_and_scheme: https://github.com/django/django/blob/4.0/django/utils/http.py#L239  # noqa: FIX002

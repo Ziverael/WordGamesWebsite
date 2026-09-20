@@ -22,6 +22,8 @@
                     <a href="{{ url_for('profile.games') }}"><button>Games</button></a>
                     <a href="{{ url_for('game_editor.main') }}"><button>Game Editor</button></a>
                 </div>
+            {% elif current_user.role.name == "student" %}
+                <a href="{{ url_for('profile.teachers') }}"><button>Teachers</button></a>
             {% else %}
             {% endif %}
 

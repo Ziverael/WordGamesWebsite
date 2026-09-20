@@ -25,7 +25,6 @@ def load_user(user_id):
 def page_not_found(_error):
     return render_template("error.html"), 404
 
-
 extensions_manager.login_manager.login_view = "auth.login"
 
 

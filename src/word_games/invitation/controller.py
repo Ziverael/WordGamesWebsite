@@ -1,11 +1,14 @@
 import uuid
 from datetime import datetime
 
+from pydantic import PositiveInt
+
 from word_games.config.glob import GLOBAL_SETTINGS
 from word_games.db import get_session
 from word_games.error import PendingInvitationError, WordGamesError
 from word_games.invitation.db import (
     Invitation,
+    select_count_user_received_pending_invitatitions,
     select_invitation_exists,
     select_invitation_status,
     select_pending_invitation_exists,
@@ -13,10 +16,12 @@ from word_games.invitation.db import (
     select_user_sent_invitatitions,
     select_user_sent_pending_invitatitions,
     update_status,
+    select_accepted_invitaiotns_where_sender_id,
+    select_user_received_pending_invitatitions,
 )
 from word_games.invitation.model import Status
 from word_games.user.controller import raise_if_user_not_exists
-from word_games.utils import TZ_UTC
+from word_games.utils import TZ_UTC, raise_if_negative_int
 
 
 def send_invitation(sender: uuid.UUID, receiver: uuid.UUID):
@@ -83,6 +88,35 @@ def get_all_user_sent_invitations(public_id: uuid.UUID) -> None:
         msg = "Cannot cancel this invitation."
         raise WordGamesError(msg) from e
 
+
+def get_user_pending_invitaitons_count(public_id: uuid.UUID) -> PositiveInt:
+    try:
+        count = select_count_user_received_pending_invitatitions(public_id)
+        raise_if_negative_int(count)
+    except Exception as e:
+        msg = "Invitation counting error."
+        raise WordGamesError(msg) from e
+    else:
+        return count
+
+def get_user_pending_invitaitons(public_id: uuid.UUID) -> list[Invitation]:
+    try:
+        invs = select_user_received_pending_invitatitions(public_id)
+    except Exception as e:
+        msg = "Cannot collect invitations."
+        raise WordGamesError(msg) from e
+    else:
+        return invs
+
+
+def get_user_accepted_invitations(public_id: uuid.UUID) -> list[Invitation]:
+    try:
+        invitations = select_accepted_invitaiotns_where_sender_id(public_id)
+    except Exception as e:
+        msg = "Cannot collect invitations."
+        raise WordGamesError(msg) from e
+    else:
+        return invitations
 
 def _raise_if_invitation_is_pending(
     sender_id: uuid.UUID, receiver_id: uuid.UUID

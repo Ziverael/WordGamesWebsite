@@ -6,6 +6,7 @@ from sqlalchemy import (
     DateTime,
     Index,
     exists,
+    func,
     select,
     update,
 )
@@ -36,6 +37,7 @@ class Invitation(BaseTable):
     )
     __table_args__ = (
         Index("idx_invitation_public_id", public_id, unique=True),
+        Index("idx_receiver_status", "receiver_id", "status", unique=False),
     )
 
 
@@ -71,7 +73,7 @@ def select_user_received_invitatitions(
         results = session.execute(
             select(Invitation).where(Invitation.receiver_id == public_id)
         )
-        return results.mappings().all()
+        return results.scalars().all()
 
 
 def select_user_sent_invitatitions(public_id: uuid.UUID) -> list[Invitation]:
@@ -81,6 +83,16 @@ def select_user_sent_invitatitions(public_id: uuid.UUID) -> list[Invitation]:
         )
         return results.mappings().all()
 
+def select_accepted_invitaiotns_where_sender_id(public_id: uuid.UUID) -> list[Invitation]:
+    with get_session() as session:
+        results = session.execute(
+            select(Invitation)
+            .where(
+                (Invitation.sender_id == public_id)
+                & (Invitation.status == Status.ACCEPTED)
+            )
+        )
+        return results.mappings().all()
 
 def select_user_sent_pending_invitatitions(
     public_id: uuid.UUID,
@@ -93,6 +105,34 @@ def select_user_sent_pending_invitatitions(
             )
         )
         return results.mappings().all()
+
+
+def select_user_received_pending_invitatitions(
+    public_id: uuid.UUID,
+) -> list[Invitation]:
+    with get_session() as session:
+        results = session.execute(
+            select(Invitation).where(
+                (Invitation.receiver_id == public_id)
+                & (Invitation.status == Status.PENDING)
+            )
+        )
+        return results.scalars().all()
+
+
+def select_count_user_received_pending_invitatitions(
+    public_id: uuid.UUID,
+) -> int:
+    with get_session() as session:
+        results = session.execute(
+            select(func.count())
+            .select_from(Invitation)
+            .where(
+                (Invitation.receiver_id == public_id)
+                & (Invitation.status == Status.PENDING)
+            )
+        )
+        return results.scalar_one()
 
 
 def select_invitation_exists(invitation_id: uuid.UUID) -> bool:

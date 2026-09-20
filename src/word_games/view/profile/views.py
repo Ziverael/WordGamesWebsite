@@ -14,10 +14,10 @@ from word_games.game.db import (
     select_user_games_public_ids,
     select_user_games_titles,
 )
-from word_games.invitation.controller import send_invitation
-from word_games.user.db import select_neighbours_of_user_where_public_id
+from word_games.invitation.controller import send_invitation, get_user_accepted_invitations, get_user_pending_invitaitons, accept_invitation, reject_invitation
+from word_games.user.db import select_neighbours_of_user_where_public_id, select_username_where_public_id
 from word_games.utils import TZ_UTC, normalize_text, rename_dict_key
-from word_games.view.hooks import admit_teacher
+from word_games.view.hooks import admit_teacher, admit_student
 from word_games.view.profile.forms import StudentInvitationForm
 
 
@@ -32,6 +32,16 @@ def requires_teacher_role(f):
 
     return wrapper
 
+def requires_student_role(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if redirect_target := admit_student(
+            msg="This subpage is not avaiable for your role."
+        ):
+            return redirect_target
+        return f(*args, **kwargs)
+
+    return wrapper
 
 @profile.route("/profile/me", methods=["GET", "POST"])
 def user_profile():
@@ -77,6 +87,49 @@ def student_invitation():
         "profile/invite_student.html",
         form=form,
     ), HTTPStatusCode.OK
+
+
+@profile.route("/profile/teachers", methods=["GET", "POST"])
+@requires_student_role
+def teachers():
+    teachers = get_user_accepted_invitations(current_user.public_id)
+    invitations = get_user_pending_invitaitons(current_user.public_id)
+    invitations_table = [
+        {
+            "invitation_id": inv.public_id,
+            "teacher": select_username_where_public_id(inv.sender_id),
+            "send_date": inv.send_date,
+        } for inv in invitations
+    ]
+    flash(invitations_table)
+    return render_template(
+        "profile/teachers.html",
+        user=current_user,
+        teachers=teachers,
+        invitations=invitations_table,
+    ), HTTPStatusCode.OK
+
+@profile.route("/profile/teachers/accept/<uuid:invitation_id>", methods=["GET", "POST"])
+@requires_student_role
+def accept_teacher_invitation(invitation_id: uuid.UUID):
+    try:
+        accept_invitation(invitation_id)
+        flash(f"Invitation accepted.", "success")
+    except WordGamesError:
+        flash(f"Encountered problem while accepting invitation", "success")
+    return redirect(url_for("profile.teachers"))
+
+@profile.route("/profile/teachers/reject/<uuid:invitation_id>", methods=["GET", "POST"])
+@requires_student_role
+def reject_teacher_invitation(invitation_id: uuid.UUID):
+    try:
+        reject_invitation(invitation_id)
+        flash(f"Invitation rejected.", "success")
+    except WordGamesError:
+        flash(f"Encountered problem while rejecting invitation", "success")
+    return redirect(url_for("profile.teachers"))
+
+
 
 
 @profile.route("/profile/assignment", methods=["GET", "POST"])

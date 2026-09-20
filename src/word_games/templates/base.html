@@ -25,6 +25,14 @@
         </div>
         {% if current_user.username %}
         <div>
+            {% if current_user.role.name == "student" %}
+                <a href="{{ url_for('profile.teachers') }}">
+                    <button class="login-btn" >
+                        <img class="text-img" src="{{ url_for('static', filename='image/svg/email-button.svg') }}" alt="invitations:">
+                        <span id="invitation-badge">0</span>
+                    </button>
+                </a>
+            {% endif %}
             <a href="{{ url_for('profile.user_profile') }}">
                 <button class="login-btn">
                     Profile
@@ -102,6 +110,9 @@
 </body>
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 <script src="{{ url_for('static', filename='js/local-time.js') }}"></script>
+{% if current_user.role.name == "student" %}
+    <script src="{{ url_for('static', filename='js/get-notyfications.js') }}"></script>
+{% endif %}
 {% block scripts %}
 {% endblock %}
 </html>
