@@ -28,6 +28,7 @@ def raise_if_nonpositive_int(value: int):
         msg = "value must be positive"
         raise ValueError(msg)
 
+
 def raise_if_negative_int(value: int):
     if value < 0:
         msg = "value must be nonnegative"

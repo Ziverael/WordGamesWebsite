@@ -16,9 +16,11 @@ class Extensions:
 
     @cached_property
     def login_manager(self):
-        from flask_login import LoginManager, AnonymousUserMixin
+        from flask_login import AnonymousUserMixin, LoginManager
+
         class MyAnonymousUser(AnonymousUserMixin):
             role = None
+
         login_manager = LoginManager()
         login_manager.anonymous_user = MyAnonymousUser
         return login_manager

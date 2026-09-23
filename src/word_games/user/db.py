@@ -190,6 +190,7 @@ def select_user_role(public_id: uuid.UUID) -> Role | None:
         )
     return results.scalar_one_or_none()
 
+
 def select_username_where_public_id(public_id: uuid.UUID) -> str:
     with get_session() as session:
         results = session.execute(

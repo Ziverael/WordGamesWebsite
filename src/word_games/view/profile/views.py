@@ -14,10 +14,19 @@ from word_games.game.db import (
     select_user_games_public_ids,
     select_user_games_titles,
 )
-from word_games.invitation.controller import send_invitation, get_user_accepted_invitations, get_user_pending_invitaitons, accept_invitation, reject_invitation
-from word_games.user.db import select_neighbours_of_user_where_public_id, select_username_where_public_id
+from word_games.invitation.controller import (
+    accept_invitation,
+    get_user_accepted_invitations,
+    get_user_pending_invitaitons,
+    reject_invitation,
+    send_invitation,
+)
+from word_games.user.db import (
+    select_neighbours_of_user_where_public_id,
+    select_username_where_public_id,
+)
 from word_games.utils import TZ_UTC, normalize_text, rename_dict_key
-from word_games.view.hooks import admit_teacher, admit_student
+from word_games.view.hooks import admit_student, admit_teacher
 from word_games.view.profile.forms import StudentInvitationForm
 
 
@@ -32,6 +41,7 @@ def requires_teacher_role(f):
 
     return wrapper
 
+
 def requires_student_role(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
@@ -42,6 +52,7 @@ def requires_student_role(f):
         return f(*args, **kwargs)
 
     return wrapper
+
 
 @profile.route("/profile/me", methods=["GET", "POST"])
 def user_profile():
@@ -99,7 +110,8 @@ def teachers():
             "invitation_id": inv.public_id,
             "teacher": select_username_where_public_id(inv.sender_id),
             "send_date": inv.send_date,
-        } for inv in invitations
+        }
+        for inv in invitations
     ]
     flash(invitations_table)
     return render_template(
@@ -109,27 +121,31 @@ def teachers():
         invitations=invitations_table,
     ), HTTPStatusCode.OK
 
-@profile.route("/profile/teachers/accept/<uuid:invitation_id>", methods=["GET", "POST"])
+
+@profile.route(
+    "/profile/teachers/accept/<uuid:invitation_id>", methods=["GET", "POST"]
+)
 @requires_student_role
 def accept_teacher_invitation(invitation_id: uuid.UUID):
     try:
         accept_invitation(invitation_id)
-        flash(f"Invitation accepted.", "success")
+        flash("Invitation accepted.", "success")
     except WordGamesError:
-        flash(f"Encountered problem while accepting invitation", "success")
+        flash("Encountered problem while accepting invitation", "success")
     return redirect(url_for("profile.teachers"))
 
-@profile.route("/profile/teachers/reject/<uuid:invitation_id>", methods=["GET", "POST"])
+
+@profile.route(
+    "/profile/teachers/reject/<uuid:invitation_id>", methods=["GET", "POST"]
+)
 @requires_student_role
 def reject_teacher_invitation(invitation_id: uuid.UUID):
     try:
         reject_invitation(invitation_id)
-        flash(f"Invitation rejected.", "success")
+        flash("Invitation rejected.", "success")
     except WordGamesError:
-        flash(f"Encountered problem while rejecting invitation", "success")
+        flash("Encountered problem while rejecting invitation", "success")
     return redirect(url_for("profile.teachers"))
-
-
 
 
 @profile.route("/profile/assignment", methods=["GET", "POST"])

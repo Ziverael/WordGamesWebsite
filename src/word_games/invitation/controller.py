@@ -8,16 +8,16 @@ from word_games.db import get_session
 from word_games.error import PendingInvitationError, WordGamesError
 from word_games.invitation.db import (
     Invitation,
+    select_accepted_invitaiotns_where_sender_id,
     select_count_user_received_pending_invitatitions,
     select_invitation_exists,
     select_invitation_status,
     select_pending_invitation_exists,
     select_user_received_invitatitions,
+    select_user_received_pending_invitatitions,
     select_user_sent_invitatitions,
     select_user_sent_pending_invitatitions,
     update_status,
-    select_accepted_invitaiotns_where_sender_id,
-    select_user_received_pending_invitatitions,
 )
 from word_games.invitation.model import Status
 from word_games.user.controller import raise_if_user_not_exists
@@ -99,6 +99,7 @@ def get_user_pending_invitaitons_count(public_id: uuid.UUID) -> PositiveInt:
     else:
         return count
 
+
 def get_user_pending_invitaitons(public_id: uuid.UUID) -> list[Invitation]:
     try:
         invs = select_user_received_pending_invitatitions(public_id)
@@ -117,6 +118,7 @@ def get_user_accepted_invitations(public_id: uuid.UUID) -> list[Invitation]:
         raise WordGamesError(msg) from e
     else:
         return invitations
+
 
 def _raise_if_invitation_is_pending(
     sender_id: uuid.UUID, receiver_id: uuid.UUID

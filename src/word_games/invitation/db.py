@@ -83,16 +83,19 @@ def select_user_sent_invitatitions(public_id: uuid.UUID) -> list[Invitation]:
         )
         return results.mappings().all()
 
-def select_accepted_invitaiotns_where_sender_id(public_id: uuid.UUID) -> list[Invitation]:
+
+def select_accepted_invitaiotns_where_sender_id(
+    public_id: uuid.UUID,
+) -> list[Invitation]:
     with get_session() as session:
         results = session.execute(
-            select(Invitation)
-            .where(
+            select(Invitation).where(
                 (Invitation.sender_id == public_id)
                 & (Invitation.status == Status.ACCEPTED)
             )
         )
         return results.mappings().all()
+
 
 def select_user_sent_pending_invitatitions(
     public_id: uuid.UUID,
