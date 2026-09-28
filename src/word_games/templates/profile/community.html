@@ -36,6 +36,8 @@
     </table>
 </div>
 
+{% if current_user.role.name == "teacher" %}
+
 <h2>My invitations</h2>
 {% set options = ["accept", "reject"] %}
 {% set options_meta = {

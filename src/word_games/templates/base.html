@@ -26,7 +26,7 @@
         {% if current_user.username %}
         <div>
             {% if current_user.role.name == "student" %}
-                <a href="{{ url_for('profile.teachers') }}">
+                <a href="{{ url_for('profile.community') }}">
                     <button class="login-btn" >
                         <img class="text-img" src="{{ url_for('static', filename='image/svg/email-button.svg') }}" alt="invitations:">
                         <span id="invitation-badge">0</span>
