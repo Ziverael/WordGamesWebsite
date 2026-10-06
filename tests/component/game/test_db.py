@@ -6,11 +6,14 @@ from word_games.game.db import Game
 
 
 class TestGame:
-    def test_insert(self, db_session, game_factory):
+    def test_insert(self, db_session, game_factory, user_factory):
         # given
         game = game_factory.build()
+        user = user_factory.build(id=game.creator)
 
         # when
+        db_session.add(user)
+        db_session.commit()
         db_session.add(game)
         db_session.commit()
 
@@ -20,12 +23,15 @@ class TestGame:
         assert len(games_in_db) == 1
         assert games_in_db[0] == game
 
-    def test_unique_id(self, db_session, game_factory):
+    def test_unique_id(self, db_session, game_factory, user_factory):
         # given
-        game1 = game_factory.build(id=1)
-        game2 = game_factory.build(id=1)
+        user = user_factory.build(id=1)
+        game1 = game_factory.build(id=1, creator=1)
+        game2 = game_factory.build(id=1, creator=1)
 
         # when
+        db_session.add(user)
+        db_session.commit()
         db_session.add(game1)
         db_session.commit()
         db_session.add(game2)

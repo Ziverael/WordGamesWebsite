@@ -2,7 +2,16 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import UUID, Index, and_, delete, select, update
+from sqlalchemy import (
+    UUID,
+    ForeignKeyConstraint,
+    Index,
+    and_,
+    delete,
+    exists,
+    select,
+    update,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -35,6 +44,9 @@ class Game(BaseTable):
 
     __table_args__ = (
         Index("idx_unique_user_title", "creator", "title", unique=True),
+        ForeignKeyConstraint(
+            ["creator"], ["user.id"], "fk_game_creator_user", ondelete="CASCADE"
+        ),
     )
 
 
@@ -71,7 +83,7 @@ def select_user_games_public_ids(user_id: int) -> list[int]:
         return results.scalars()
 
 
-def select_user_games_titles(user_id: int) -> list[int]:
+def select_user_games_titles(user_id: int) -> list[str]:
     with get_session() as session:
         results = session.execute(
             select(Game.title).where(Game.creator == user_id)
@@ -85,6 +97,34 @@ def select_title_where_public_id(game_id: uuid.UUID) -> str:
             select(Game.title).where(Game.public_id == game_id)
         )
         return results.scalar_one()
+
+
+def select_creator_where_public_id(game_id: uuid.UUID) -> int:
+    with get_session() as session:
+        results = session.execute(
+            select(Game.creator).where(Game.public_id == game_id)
+        )
+        return results.scalar_one()
+
+
+def exists_game_id(game_id: uuid.UUID) -> bool:
+    with get_session() as session:
+        results = session.execute(
+            select(exists().where(Game.public_id == game_id))
+        )
+        return results.scalar_one()
+
+
+def select_public_id_where_title_and_creator(
+    title: str, user_id: int
+) -> str | None:
+    with get_session() as session:
+        results = session.execute(
+            select(Game.public_id).where(
+                (Game.title == title) & (Game.creator == user_id)
+            )
+        )
+        return results.scalar_one_or_none()
 
 
 def delete_game_where_public_id(game_id: uuid.UUID) -> None:

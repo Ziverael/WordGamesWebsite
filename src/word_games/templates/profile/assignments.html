@@ -4,5 +4,111 @@
 <h1>Assignments</h1>
 <p>In this section You can assign your games to the students. Games can be created in <b>Game Editor</b>.</p>
 
+{% if user.role.name == "teacher" %}
+    <p>As a teacher, you can assign games to your students. You can also see the assignments that you have created and the assignments that have been assigned to you.</p>
+    <br>
+
+    <a href="{{ url_for('profile.create_assignment') }}"><button>Create assignment</button></a>
+    <a href="{{ url_for('profile.remove_assignment') }}"><button>Remove assignment</button></a>
+{% else %}
+    <p>As a student, you can see the assignments that have been assigned to you by your teachers. You can also see the assignments that you have created.</p>
+{% endif %}
+
+{% if got_tasks | length != 0 %}
+    <h2>Assigned to me</h2>
+    {% set options_mapping = {
+        "solve": {"text": "Solve", "route": "game.play"},
+    }
+    %}
+    {% set columns_mapping = {
+        "Teacher": "creator_username",
+        "Task Name": "hrid",
+        "Assigned at": "created_at",
+        "Status": "solved",
+        "Score": "score",
+        "Type": "type",
+        "Subtype": "subtype",
+    } %}
+
+    <div class="glass-table-wrapper" style="max-height: 200px;">
+        <table class="glass-table">
+            <thead class="table-dark">
+                <tr>
+                    {% for header in columns_mapping.keys() | list + options_mapping.keys() | list %}
+                        <th scope="col">{{ header }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in got_tasks %}
+                    <tr>
+                        {% for key in columns_mapping.values() %}
+                            {% if key in ["created_at", "recently_viewed_at"] %}
+                        <td><time class="local-time" datetime="{{ row[key] | format_datetime }}">{{ row[key] | format_datetime }}</time></td>
+                            {% else %}
+                            <td>{{ row[key] }}</td>
+                        {% endif %}
+                        {% endfor %}
+                        {% for button, meta in  options_mapping.items()%}
+                                <td><a href="{{ url_for(meta['route'], game_id=row['game_id']) }}"><button id="game-button-{{ button }}">{{ button }}</button></a></td>
+                            {% endfor %}
+                        </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}
+
+{% if created_tasks | length != 0 %}
+<br>
+    <h2>Created by me</h2>
+    {% set options_mapping = {
+        "delete": {"text": "Delete" , "route": "profile.remove_assignment_by_hrid"},
+        "see response": {"text": "See Response", "route": "game.see_response"},
+    }
+    %}
+    {% set columns_mapping = {
+        "Student": "assignee_username",
+        "Task Name": "hrid",
+        "Assigned at": "created_at",
+        "Recently viewed": "recently_viewed_at",
+        "Status": "solved",
+        "Score": "score",
+        "Type": "type",
+        "Subtype": "subtype",
+    } %}
+
+    <div class="glass-table-wrapper" style="max-height: 200px;">
+        <table class="glass-table">
+            <thead class="table-dark">
+                <tr>
+                    {% for header in columns_mapping.keys() | list + options_mapping.keys() | list %}
+                        <th scope="col">{{ header }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in got_tasks %}
+                    <tr>
+                        {% for key in columns_mapping.values() %}
+                            {% if key in ["created_at", "recently_viewed_at"] %}
+                        <td><time class="local-time" datetime="{{ row[key] | format_datetime }}">{{ row[key] | format_datetime }}</time></td>
+                            {% else %}
+                            <td>{{ row[key] }}</td>
+                        {% endif %}
+                        {% endfor %}
+                        {% for button, meta in  options_mapping.items()%}
+                                <td><a href="{{ url_for(meta['route'], hrid=row['hrid']) }}"><button id="game-button-{{ button }}">{{ button }}</button></a></td>
+                            {% endfor %}
+                        </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+
+
+
+{% endif %}
 
 {% endblock %}

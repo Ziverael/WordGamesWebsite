@@ -1,80 +1,213 @@
 import uuid
 
 import pytest
-from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
 
-from word_games.task import db as _db
-from word_games.task.db import Task
+from word_games.task.controller import TaskNaturalIdentifier
+from word_games.view.profile import queries as _queries
 
 
-class TestTask:
-    def test_insert(self, db_session, task_factory, game_factory, user_factory):
-        # given
-        task = task_factory.build()
-        game = game_factory.build(public_id=task.game_id)
-        creator = user_factory.build(id=game.creator)
-        assignee = user_factory.build(public_id=task.assignee_id)
-
-        # when
-        db_session.add(creator)
-        db_session.add(assignee)
+@pytest.mark.parametrize(
+    ("db_state", "expected"),
+    [
+        pytest.param({}, [], id="empty-db"),
+        pytest.param(
+            {
+                "user": [
+                    {
+                        "id": 1,
+                        "public_id": uuid.UUID(
+                            "00000000-00000000-00000000-00000020"
+                        ),
+                    },
+                    {
+                        "public_id": uuid.UUID(
+                            "00000000-00000000-00000000-00000000"
+                        ),
+                    },
+                ],
+                "game": [
+                    {
+                        "public_id": uuid.UUID(
+                            "00000000-00000000-00000000-00000000"
+                        ),
+                        "creator": 1,
+                    }
+                ],
+                "task": [
+                    {
+                        "game_id": uuid.UUID(
+                            "00000000-00000000-00000000-00000000"
+                        ),
+                        "assignee_id": uuid.UUID(
+                            "00000000-00000000-00000000-00000000"
+                        ),
+                    }
+                ],
+            },
+            [],
+            id="not-matching-entry",
+        ),
+        pytest.param(
+            {
+                "user": [
+                    {
+                        "id": 1,
+                        "public_id": uuid.UUID(
+                            "00000000-00000000-00000000-00000010"
+                        ),
+                    },
+                    {
+                        "public_id": uuid.UUID(
+                            "00000000-00000000-00000000-00000000"
+                        ),
+                    },
+                ],
+                "game": [
+                    {
+                        "public_id": uuid.UUID(
+                            "00000000-00000000-00000000-00000000"
+                        ),
+                        "creator": 1,
+                    }
+                ],
+                "task": [
+                    {
+                        "hrid": "exhausted_kitty_1234",
+                        "game_id": uuid.UUID(
+                            "00000000-00000000-00000000-00000000"
+                        ),
+                        "assignee_id": uuid.UUID(
+                            "00000000-00000000-00000000-00000000"
+                        ),
+                    }
+                ],
+            },
+            [
+                TaskNaturalIdentifier(
+                    hrid="exhausted_kitty_1234",
+                    assignee_public_id=uuid.UUID(
+                        "00000000-00000000-00000000-00000000"
+                    ),
+                    creator_public_id=uuid.UUID(
+                        "00000000-00000000-00000000-00000010"
+                    ),
+                )
+            ],
+            id="one-matching-entry",
+        ),
+        pytest.param(
+            {
+                "user": [
+                    {
+                        "id": 1,
+                        "public_id": uuid.UUID(
+                            "00000000-00000000-00000000-00000010"
+                        ),
+                    },
+                    {
+                        "public_id": uuid.UUID(
+                            "00000000-00000000-00000000-00000000"
+                        ),
+                    },
+                ],
+                "game": [
+                    {
+                        "public_id": uuid.UUID(
+                            "00000000-00000000-00000000-00000000"
+                        ),
+                        "creator": 1,
+                    }
+                ],
+                "task": [
+                    {
+                        "hrid": "exhausted_kitty_1234",
+                        "game_id": uuid.UUID(
+                            "00000000-00000000-00000000-00000000"
+                        ),
+                        "assignee_id": uuid.UUID(
+                            "00000000-00000000-00000000-00000000"
+                        ),
+                    },
+                    {
+                        "hrid": "red_lion_ddw2",
+                        "game_id": uuid.UUID(
+                            "00000000-00000000-00000000-00000000"
+                        ),
+                        "assignee_id": uuid.UUID(
+                            "00000000-00000000-00000000-00000000"
+                        ),
+                    },
+                    {
+                        "hrid": "angry_bird_3523",
+                        "game_id": uuid.UUID(
+                            "00000000-00000000-00000000-00000000"
+                        ),
+                        "assignee_id": uuid.UUID(
+                            "00000000-00000000-00000000-00000000"
+                        ),
+                    },
+                ],
+            },
+            [
+                TaskNaturalIdentifier(
+                    hrid="angry_bird_3523",
+                    assignee_public_id=uuid.UUID(
+                        "00000000-00000000-00000000-00000000"
+                    ),
+                    creator_public_id=uuid.UUID(
+                        "00000000-00000000-00000000-00000010"
+                    ),
+                ),
+                TaskNaturalIdentifier(
+                    hrid="exhausted_kitty_1234",
+                    assignee_public_id=uuid.UUID(
+                        "00000000-00000000-00000000-00000000"
+                    ),
+                    creator_public_id=uuid.UUID(
+                        "00000000-00000000-00000000-00000010"
+                    ),
+                ),
+                TaskNaturalIdentifier(
+                    hrid="red_lion_ddw2",
+                    assignee_public_id=uuid.UUID(
+                        "00000000-00000000-00000000-00000000"
+                    ),
+                    creator_public_id=uuid.UUID(
+                        "00000000-00000000-00000000-00000010"
+                    ),
+                ),
+            ],
+            id="many-matching-entry",
+        ),
+    ],
+)
+def test_select_task_natural_identifier_where_assignee_and_creator(
+    db_session, task_factory, game_factory, user_factory, db_state, expected
+):
+    # given
+    factories = {
+        "task": task_factory,
+        "user": user_factory,
+        "game": game_factory,
+    }
+    for factory_name, state in db_state.items():
+        factory = factories[factory_name]
+        for entry in state:
+            db_session.add(factory.build(**entry))
         db_session.commit()
-        db_session.add(game)
-        db_session.commit()
-        db_session.add(task)
-        db_session.commit()
+    assignee_id = uuid.UUID("00000000-00000000-00000000-00000000")
+    creator_id = uuid.UUID("00000000-00000000-00000000-00000010")
 
-        # then
-        stmt = select(Task)
-        tasks_in_db = db_session.scalars(stmt).all()
-        assert len(tasks_in_db) == 1
-        assert tasks_in_db[0] == task
+    # when
+    results = (
+        _queries.select_task_natural_identifier_where_assignee_and_creator(
+            assignee=assignee_id,
+            creator=creator_id,
+        )
+    )
 
-    def test_unique_id(
-        self, db_session, task_factory, game_factory, user_factory
-    ):
-        # given
-        creator = user_factory.build(id=1)
-        assignee = user_factory.build(
-            public_id=uuid.UUID("00000000-0000-0000-0000-000000000000")
-        )
-        game1 = game_factory.build(
-            public_id=uuid.UUID("00000000-0000-0000-0000-000000000000"),
-            creator=1,
-        )
-        game2 = game_factory.build(
-            public_id=uuid.UUID("00000000-0000-0000-0000-000000000001"),
-            creator=1,
-        )
-        task1 = task_factory.build(
-            id=1,
-            game_id=uuid.UUID("00000000-0000-0000-0000-000000000000"),
-            assignee_id=uuid.UUID("00000000-0000-0000-0000-000000000000"),
-        )
-        task2 = task_factory.build(
-            id=1,
-            game_id=uuid.UUID("00000000-0000-0000-0000-000000000001"),
-            assignee_id=uuid.UUID("00000000-0000-0000-0000-000000000000"),
-        )
-
-        # when
-        db_session.add(creator)
-        db_session.add(assignee)
-        db_session.commit()
-        db_session.add(game1)
-        db_session.add(game2)
-        db_session.commit()
-        db_session.add(task1)
-        db_session.commit()
-        db_session.add(task2)
-
-        # then
-        expected_pattern = (
-            r"uplicate key value violates unique constraint \"task_pkey\""
-        )
-        with pytest.raises(IntegrityError, match=expected_pattern):
-            db_session.commit()
+    # then
+    assert results == expected
 
 
 @pytest.mark.parametrize(
@@ -247,7 +380,7 @@ class TestTask:
                     },
                 ],
             },
-            3,
+            2,
             id="many-matching-entry-different-teachers",
         ),
     ],
@@ -267,9 +400,12 @@ def test_count_tasks_where_assignee_id(
             db_session.add(factory.build(**entry))
         db_session.commit()
     assignee_id = uuid.UUID("00000000-00000000-00000000-00000000")
+    creator_id = uuid.UUID("00000000-00000000-00000000-00000010")
 
     # when
-    results = _db.count_tasks_where_assignee_id(assignee_id)
+    results = _queries.count_tasks_where_assignee_and_creator(
+        assignee_id, creator_id
+    )
 
     # then
     assert results == expected
@@ -484,12 +620,12 @@ def test_count_tasks_where_assignee_id(
                     },
                 ],
             },
-            2,
+            1,
             id="many-matching-entry-different-teachers",
         ),
     ],
 )
-def test_count_solved_tasks_where_assignee_id(
+def test_count_solved_tasks_where_assignee_and_creator(
     db_session, task_factory, game_factory, user_factory, db_state, expected
 ):
     # given
@@ -504,9 +640,12 @@ def test_count_solved_tasks_where_assignee_id(
             db_session.add(factory.build(**entry))
         db_session.commit()
     assignee_id = uuid.UUID("00000000-00000000-00000000-00000000")
+    creator_id = uuid.UUID("00000000-00000000-00000000-00000010")
 
     # when
-    results = _db.count_solved_tasks_where_assignee_id(assignee_id)
+    results = _queries.count_solved_tasks_where_assignee_and_creator(
+        assignee_id, creator_id
+    )
 
     # then
     assert results == expected

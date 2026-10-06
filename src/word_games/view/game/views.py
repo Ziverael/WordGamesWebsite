@@ -56,6 +56,10 @@ def setup_game(template: str, content: dict):
             raise ValueError(msg)
 
 
+@game.route("/see_response/<string:hrid>", methods=["GET"])
+def see_response(hrid: str): ...
+
+
 def get_sentences_with_gaps(content: dict):
     output: list[str] = []
     copied_content = content.copy()

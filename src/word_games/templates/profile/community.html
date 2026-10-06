@@ -1,79 +1,92 @@
 {% extends "profile/base.html" %}
 
 {% block content%}
-<h1>Teachers</h1>
-<p>There are your teachers and invitations to become a student of a new teacher.</p>
+<h1>Community</h1>
 
+{% set options = ["delete"] %}
+{% set options_meta = {
+    "delete": {"route": "profile.delete_relation"},
+}
+%}
 <h2>My teachers</h2>
-<div class="glass-table-wrapper">
+<div class="glass-table-wrapper" style="max-height: 200px;">
     <table class="glass-table">
         <thead class="table-dark">
             <tr>
-                {% for header in ["Teacher", "Student since"]%}
+                {% for header in ["Name", "Id"] + options%}
                     <th scope="col">{{ header }}</th>
                 {% endfor %}
             </tr>
         </thead>
-
         <tbody>
-            {% for row in table %}
+            {% for row in teachers %}
                 <tr>
                     {% for key, value in row.items() %}
-                        {% if key != "public_id" %}
-                            {% if key in ["created_at", "modified_at"] %}
-                                <td><time class="local-time" datetime="{{ value | format_datetime }}">{{ value | format_datetime }}</time></td>
-                            {% else %}
-                                <td>{{ value }}</td>
-                            {% endif %}
-                        {% endif %}
+                        <td>{{ value }}</td>
                     {% endfor %}
                     {% for button in  options%}
-                        <td><a href="{{ url_for(options_meta[button]['route'], game_id=row['public_id']) }}"><button id="game-button-{{ button }}">{{ button }}</button></a></td>
-                    {% endfor %}
-                </tr>
+                        {% if button == "delete" %}
+                            <td><a href="{{ url_for(options_meta[button]['route'], public_id=row['public_id']) }}" onclick="return confirm('Are you sure you want to delete this relation?');"><button id="game-button-{{ button }}">{{ button }}</button></a></td>
+                        {% else %}
+                            <td><a href="{{ url_for(options_meta[button]['route'], public_id=row['public_id']) }}"><button id="game-button-{{ button }}">{{ button }}</button></a></td>
+                        {% endif %}
+                        {% endfor %}
+                    </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
 
 {% if current_user.role.name == "teacher" %}
-
-<h2>My invitations</h2>
-{% set options = ["accept", "reject"] %}
+{% set options = ["new task", "delete"] %}
 {% set options_meta = {
-    "accept": {"route": "profile.accept_teacher_invitation"},
-    "reject": {"route": "profile.reject_teacher_invitation"},
+    "new task": {"route": "profile.assign_game_by_user_id", "text": "New"},
+    "delete": {"route": "profile.delete_relation", "text": "Delete"},
 }
 %}
+{% set tasks_meta_routes = {
+    "assignments_count": "profile.assign_game_by_user_id",
+    "solved_assignments_count": "profile.assign_game_by_user_id",
+    "not_solved_assignments_count": "profile.assign_game_by_user_id",
+}
+%}
+<h2>My students</h2>
+<a href="{{ url_for('profile.student_invitation') }}"><button>Add student</button></a>
+<a href="{{ url_for('profile.remove_student') }}"><button>Remove student</button></a>
+
 <div class="glass-table-wrapper">
     <table class="glass-table">
         <thead class="table-dark">
             <tr>
-                {% for header in ["Teacher", "Received at"] + options %}
+                {% for header in ["Name", "Id", "All tasks", "Solved tasks", "Unsolved tasks"] + options%}
                     <th scope="col">{{ header }}</th>
                 {% endfor %}
             </tr>
         </thead>
-
         <tbody>
-            {% for row in invitations %}
+            {% for row in students %}
                 <tr>
                     {% for key, value in row.items() %}
-                        {% if key != "invitation_id" %}
-                            {% if key in ["created_at", "modified_at"] %}
-                                <td><time class="local-time" datetime="{{ value | format_datetime }}">{{ value | format_datetime }}</time></td>
-                            {% else %}
-                                <td>{{ value }}</td>
+                        <td>
+                            {{ value }}
+                            {% if "assignments_count" in key %}
+                                <a href="{{ url_for(tasks_meta_routes[key], public_id=row['public_id']) }}"><button id="game-button-{{ button }}">See all</button></a>
                             {% endif %}
-                        {% endif %}
+                        </td>
                     {% endfor %}
                     {% for button in  options%}
-                        <td><a href="{{ url_for(options_meta[button]['route'], invitation_id=row['invitation_id']) }}"><button id="game-button-{{ button }}">{{ button }}</button></a></td>
-                    {% endfor %}
+                        {% if button == "delete" %}
+                            <td><a href="{{ url_for(options_meta[button]['route'], public_id=row['public_id']) }}" onclick="return confirm('Are you sure you want to delete this relation?');"><button id="game-button-{{ button }}">{{ options_meta[button]['text'] }}</button></a></td>
+                        {% else %}
+                            <td><a href="{{ url_for(options_meta[button]['route'], public_id=row['public_id']) }}"><button id="game-button-{{ button }}">{{ options_meta[button]['text'] }}</button></a></td>
+                        {% endif %}
+                        {% endfor %}
                 </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
 
+
+{% endif %}
 {% endblock %}

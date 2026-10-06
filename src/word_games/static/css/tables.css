@@ -1,6 +1,10 @@
+
 .glass-table-wrapper {
     border-radius: 18px;
     overflow: hidden;
+    overflow-y: scroll;
+    overflow-x: scroll;
+    max-height: 600px;
 
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.15);

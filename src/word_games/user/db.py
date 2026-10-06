@@ -278,9 +278,23 @@ def select_user_role(public_id: uuid.UUID) -> Role | None:
     return results.scalar_one_or_none()
 
 
-def select_username_where_public_id(public_id: uuid.UUID) -> str:
+def select_public_id_by_username(username: str) -> uuid.UUID:
+    with get_session() as session:
+        results = session.execute(
+            select(User.public_id).where(User.username == username)
+        )
+    return results.scalar_one_or_none()
+
+
+def select_username_where_public_id(public_id: uuid.UUID) -> str | None:
     with get_session() as session:
         results = session.execute(
             select(User.username).where(User.public_id == public_id)
         )
+        return results.scalar_one_or_none()
+
+
+def select_public_id_where_id(id_: int) -> uuid.UUID | None:
+    with get_session() as session:
+        results = session.execute(select(User.public_id).where(User.id == id_))
         return results.scalar_one_or_none()

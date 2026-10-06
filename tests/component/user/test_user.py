@@ -276,7 +276,7 @@ def test_delete_community_network_edge__not_matching_relation(db_session):
 
 
 @pytest.mark.parametrize(
-    ("input", "expected"),
+    ("input_", "expected"),
     [
         (
             (
@@ -304,7 +304,9 @@ def test_delete_community_network_edge__not_matching_relation(db_session):
         ),
     ],
 )
-def test_exists_community_network_edge(db_session, input: list, expected: bool):
+def test_exists_community_network_edge(
+    db_session, input_: list, expected: bool
+):
     # given
     uuid1 = uuid.UUID("00000000-00000000-00000000-00000001")
     uuid2 = uuid.UUID("00000000-00000000-00000000-00000002")
@@ -322,7 +324,7 @@ def test_exists_community_network_edge(db_session, input: list, expected: bool):
     db_session.commit()
 
     # when
-    results = _db.exists_community_network_edge(*input)
+    results = _db.exists_community_network_edge(*input_)
 
     # then
     assert results == expected

@@ -8,19 +8,20 @@
 
 
 {% block content%}
-    <h1>Invite student</h1>
-    <p>Ask student for his Public Id in order to send an invitation.</p>
+<section class="glass-card hero">
+    <h1>Remove assigment</h1>
     <p>
         <form action="" method="post" novalidate>
             {{ form.hidden_tag() }}
             <p>
-                {{ form.student_id.label }}<br>
-                {{ form.student_id() }}
-                {{ render_errors(form.student_id) }}
+                {{ form.task.label }}<br>
+                {{ form.task() }}
+                {{ render_errors(form.task) }}
 
             </p>
             <br>
             <p>{{ form.submit() }}</p>
         </form>
     </p>
+</section>
 {% endblock %}

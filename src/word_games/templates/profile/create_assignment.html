@@ -2,6 +2,7 @@
 {% from "auth/macros.html" import render_errors %}
 
 {% block css %}
+{{super()}}
 <link rel="stylesheet" href="{{ url_for('static', filename = 'css/forms.css') }}" type="text/css"/>
 {% endblock %}
 
@@ -24,6 +25,7 @@
                 {{ render_errors(form.game) }}
 
             </p>
+            <br>
             <p>{{ form.submit() }}</p>
         </form>
     </p>

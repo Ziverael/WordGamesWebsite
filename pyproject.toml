@@ -132,6 +132,9 @@ suppress-dummy-args = true
 suppress-none-returning = true
 
 
+[tool.pytest]
+minversion = "9.0"
+
 [tool.pytest.ini_options]
 junit_family = "xunit2"
 asyncio_mode = "auto"
